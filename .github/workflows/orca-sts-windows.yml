@@ -44,7 +44,7 @@ jobs:
 
       - uses: ./.github/actions/install-mobile-dependencies
 
-      - name: Test terminal startup on the application runtime
+      - name: Test terminal startup fixtures
         run: pnpm test src/renderer/src/components/terminal-pane/pty-connection-spawn-and-startup.test.ts --maxWorkers=2
 
       # The root unit suite uses the same Linux environment as upstream unit-tests.yml.
