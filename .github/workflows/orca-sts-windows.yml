@@ -27,6 +27,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Fetch upstream releases for compatibility tests
+        run: git fetch --no-tags https://github.com/stablyai/orca.git 'refs/tags/v*:refs/tags/v*'
+
       - uses: ./.github/actions/install-node-dependencies
         with:
           native-runtime: node
