@@ -1,5 +1,9 @@
 {
   "stsLive": {
+    "elevenLabsStt": "ElevenLabs Scribe",
+    "inputProvider": "음성 인식",
+    "localStt": "로컬 한국어 인식",
+    "effortHint": "추론 수준을 낮추면 답변 대기가 줄어듭니다. MAS 전문 모델은 별도 설정을 사용합니다.",
     "start": "음성 대화 시작",
     "end": "음성 대화 종료",
     "interrupt": "끊고 말하기",

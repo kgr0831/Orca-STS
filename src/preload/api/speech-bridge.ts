@@ -1,6 +1,7 @@
 import type { SecretAtRestProtection } from '../../shared/secret-at-rest-protection'
 import { ipcRenderer } from 'electron'
 import type {
+  ElevenLabsAudioChunk,
   ElevenLabsSpeechRequest,
   ElevenLabsVoice,
   SpeechErrorEvent,
@@ -22,6 +23,14 @@ export const speechApi = {
     ipcRenderer.invoke('speech:listElevenLabsVoices'),
   synthesizeElevenLabs: (request: ElevenLabsSpeechRequest): Promise<Uint8Array> =>
     ipcRenderer.invoke('speech:synthesizeElevenLabs', request),
+  streamElevenLabs: (request: ElevenLabsSpeechRequest): Promise<void> =>
+    ipcRenderer.invoke('speech:streamElevenLabs', request),
+  onElevenLabsAudio: (callback: (data: ElevenLabsAudioChunk) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, data: ElevenLabsAudioChunk): void =>
+      callback(data)
+    ipcRenderer.on('speech:elevenLabsAudio', listener)
+    return () => ipcRenderer.removeListener('speech:elevenLabsAudio', listener)
+  },
   cancelElevenLabs: (requestId: string): Promise<void> =>
     ipcRenderer.invoke('speech:cancelElevenLabs', requestId),
   getCatalog: (): Promise<SpeechModelManifest[]> => ipcRenderer.invoke('speech:getCatalog'),

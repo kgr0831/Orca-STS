@@ -52,7 +52,10 @@ async function request(path: string, options: RequestInit, signal: AbortSignal):
   }
 }
 
-async function readBody(response: Response): Promise<Buffer> {
+async function readBody(
+  response: Response,
+  onChunk?: (chunk: Uint8Array) => void
+): Promise<Buffer> {
   const reader = response.body?.getReader()
   if (!reader) {
     throw new Error('elevenlabs_empty_response')
@@ -69,7 +72,11 @@ async function readBody(response: Response): Promise<Buffer> {
       if (size > MAX_RESPONSE_BYTES) {
         throw new Error('elevenlabs_response_too_large')
       }
-      chunks.push(value)
+      if (onChunk) {
+        onChunk(value)
+      } else {
+        chunks.push(value)
+      }
     }
     if (!size) {
       throw new Error('elevenlabs_empty_response')
@@ -112,10 +119,12 @@ export async function listElevenLabsVoices(signal: AbortSignal): Promise<ElevenL
 
 export async function synthesizeElevenLabsSpeech(
   input: ElevenLabsSpeechRequest,
-  signal: AbortSignal
+  signal: AbortSignal,
+  onChunk?: (chunk: Uint8Array) => void
 ): Promise<Uint8Array> {
+  const format = onChunk ? 'pcm_24000' : 'mp3_44100_128'
   const response = await request(
-    `/v1/text-to-speech/${encodeURIComponent(input.voiceId)}/stream?output_format=mp3_44100_128`,
+    `/v1/text-to-speech/${encodeURIComponent(input.voiceId)}/stream?output_format=${format}`,
     {
       method: 'POST',
       body: JSON.stringify({
@@ -132,5 +141,5 @@ export async function synthesizeElevenLabsSpeech(
     },
     signal
   )
-  return new Uint8Array(await readBody(response))
+  return new Uint8Array(await readBody(response, onChunk))
 }

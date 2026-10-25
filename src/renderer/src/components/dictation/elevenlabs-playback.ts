@@ -1,5 +1,6 @@
 import type { ElevenLabsSpeechRequest } from '../../../../shared/speech-types'
 import { createBrowserUuid } from '@/lib/browser-uuid'
+import { playElevenLabsStream } from './elevenlabs-stream-playback'
 
 export function playElevenLabsSpeech(
   request: Omit<ElevenLabsSpeechRequest, 'requestId'>,
@@ -7,6 +8,13 @@ export function playElevenLabsSpeech(
   onError: () => void
 ): () => void {
   const requestId = createBrowserUuid()
+  if (
+    typeof AudioContext !== 'undefined' &&
+    window.api.speech.streamElevenLabs &&
+    window.api.speech.onElevenLabsAudio
+  ) {
+    return playElevenLabsStream({ ...request, requestId }, onEnd, onError)
+  }
   let canceled = false
   let audio: HTMLAudioElement | null = null
   let url: string | null = null

@@ -1,5 +1,6 @@
 import type { SecretAtRestProtection } from '../../shared/secret-at-rest-protection'
 import type {
+  ElevenLabsAudioChunk,
   ElevenLabsSpeechRequest,
   ElevenLabsVoice,
   SpeechErrorEvent,
@@ -23,6 +24,8 @@ export type SpeechApi = {
   clearElevenLabsApiKey: () => Promise<{ configured: boolean }>
   listElevenLabsVoices: () => Promise<ElevenLabsVoice[]>
   synthesizeElevenLabs: (request: ElevenLabsSpeechRequest) => Promise<Uint8Array>
+  streamElevenLabs?: (request: ElevenLabsSpeechRequest) => Promise<void>
+  onElevenLabsAudio?: (callback: (data: ElevenLabsAudioChunk) => void) => () => void
   cancelElevenLabs: (requestId: string) => Promise<void>
   downloadModel: (modelId: string) => Promise<void>
   cancelDownload: (modelId: string) => Promise<void>
