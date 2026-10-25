@@ -80,7 +80,13 @@ describe('idle cursor reset during a split escape', () => {
     emit(`> ${prefix}`)
     onIdle('* Codex done')
     emit(suffix)
-    await new Promise((resolve) => setTimeout(resolve, 60))
+    await vi.waitFor(() => {
+      expect(
+        pane.terminal.write.mock.calls.some(
+          ([data]) => typeof data === 'string' && data.includes(suffix)
+        )
+      ).toBe(true)
+    })
     const writes = pane.terminal.write.mock.calls.map(([data]) =>
       typeof data === 'string' ? data : new TextDecoder().decode(data)
     )
