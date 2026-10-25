@@ -1,0 +1,86 @@
+name: Orca-STS Windows validation
+
+on:
+  push:
+    branches: [feat/elevenlabs-voice]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orca-sts-windows-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    if: github.repository == 'kgr0831/orca' || github.repository == 'kgr0831/Orca-STS'
+    runs-on: windows-2022
+    timeout-minutes: 180
+    env:
+      ORCA_BACKGROUND_LAUNCH: '1'
+      NODE_OPTIONS: --max-old-space-size=6144
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-pnpm
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          package-manager-cache: false
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: config/.bun-version
+
+      - name: Install desktop dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: ./.github/actions/install-mobile-dependencies
+
+      - name: Check the change against the fork base
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha || format('origin/{0}', github.event.repository.default_branch) }}
+        run: pnpm check:changed --base="$BASE_REF" --maxWorkers=2
+
+      - name: Test voice modes and ElevenLabs contracts
+        run: >-
+          pnpm test src/shared/sts-work-modes.test.ts
+          src/shared/sts-voice-playback.test.ts
+          src/main/speech/elevenlabs-speech-client.test.ts
+          src/main/speech/elevenlabs-transcription-session.test.ts
+          --maxWorkers=2
+
+      - name: Typecheck the application
+        run: pnpm typecheck
+
+      - name: Build Windows application
+        run: pnpm build:release
+
+      - name: Package validation build
+        run: |
+          pnpm ensure:electron-runtime
+          pnpm exec electron-builder --config config/electron-builder.config.cjs --win --x64 --dir --publish never
+
+      - name: Record the source revision
+        run: |
+          git rev-parse HEAD > dist/win-unpacked/ORCA-STS-SOURCE.txt
+          printf '%s\n' 'Validation build only. Fork installer identity and update isolation are not yet configured.' > dist/win-unpacked/ORCA-STS-VALIDATION.txt
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: orca-sts-windows-validation-${{ github.sha }}
+          path: dist/win-unpacked/
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 1

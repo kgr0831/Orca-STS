@@ -158,6 +158,10 @@ PR은 이 포크의 `main`을 대상으로 만듭니다. 리뷰와 필요한 CI 
 
 Orca-STS 전용 설치 파일은 아직 준비되지 않았습니다. 원본 Orca의 다운로드 링크는 이 포크의 음성 대화 기능을 포함하지 않습니다.
 
+포크의 **Actions → Orca-STS Windows validation**에서 Windows 빌드 검사를 실행할 수 있습니다. [`orca-sts-windows.yml`](.github/workflows/orca-sts-windows.yml)은 개인 포크 두 이름(`kgr0831/orca`, `kgr0831/Orca-STS`)에서만 실행되며, `feat/elevenlabs-voice` 푸시 또는 `main` 대상 PR에도 실행됩니다. 포크에서 Actions가 비활성화되어 있으면 먼저 활성화해야 합니다.
+
+GitHub의 기본 Windows 실행기에서 고정된 Node·pnpm·Bun과 의존성을 설치하고 변경 검사, 음성 테스트, 타입 검사, 앱 빌드와 패키징을 수행합니다. 성공 시 정확한 소스 커밋이 들어 있는 검증용 압축 패키지를 3일 동안 보관합니다. 이 작업에는 릴리즈 쓰기 권한이 없으며 원본 저장소에 게시하지 않습니다. 아직 자동 업데이트 경로가 원본을 가리키므로 검증용 패키지를 기존 설치본에 덮어쓰지 마세요. 실제 릴리즈·설치 검증은 별도 단계입니다.
+
 Windows 빌드 명령은 다음과 같습니다.
 
 ```sh
