@@ -21,7 +21,11 @@ export function useNativeChatVoiceInput(args: {
   latest.current = args
   const state = useAppStore((store) => store.dictationState)
   const settings = useAppStore((store) => store.settings?.voice)
-  const ready = settings?.enabled === true && settings.sttModel === 'zipformer-streaming-korean'
+  const ready =
+    settings?.enabled === true &&
+    (settings.sttModel === 'zipformer-streaming-korean' ||
+      (settings.sttModel === 'elevenlabs-scribe-v2-realtime' &&
+        settings.elevenLabsApiKeyConfigured === true))
   const setDraft = useCallback((text: string) => {
     draftRef.current = text
     setDraftState(text)

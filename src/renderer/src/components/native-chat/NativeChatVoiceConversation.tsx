@@ -37,10 +37,12 @@ export function NativeChatVoiceConversation(
   const conversationRun = useRef(0)
   const mounted = useRef(true)
   const dictationState = useAppStore((store) => store.dictationState)
+  const voiceSettings = useAppStore((store) => store.settings?.voice)
   const playback = useNativeChatVoicePlayback(
     props.messages,
     props.working,
-    props.active && !props.blocked && readAloud && !muted && dictationState === 'idle'
+    props.active && !props.blocked && readAloud && !muted && dictationState === 'idle',
+    voiceSettings
   )
   const input = useNativeChatVoiceInput({
     active: props.active && !props.blocked,
@@ -230,7 +232,7 @@ export function NativeChatVoiceConversation(
           <p className="text-sm">
             {translate(
               'stsVoice.setup',
-              'Enable voice input and select the local Korean streaming model in Settings → Voice.'
+              'Enable voice input and select Korean streaming or ElevenLabs Scribe in Settings → Voice.'
             )}
           </p>
           <Button
@@ -268,7 +270,7 @@ export function NativeChatVoiceConversation(
         <p className="text-xs text-muted-foreground">
           {translate(
             'stsVoice.noVoice',
-            'No local Korean voice found. Install one in your operating system; captions remain available.'
+            'Set up the selected voice in Settings → Voice. Captions remain available.'
           )}
         </p>
       ) : null}

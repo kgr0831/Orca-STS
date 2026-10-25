@@ -12,8 +12,10 @@ import {
   saveOpenAiSpeechApiKey
 } from '../speech/openai-api-key-store'
 import type { Store } from '../persistence'
+import { registerElevenLabsSpeechHandlers } from './elevenlabs-speech'
 
 export function registerSpeechHandlers(store: Store): void {
+  registerElevenLabsSpeechHandlers(store)
   ipcMain.handle('speech:getCatalog', () => {
     return SPEECH_MODEL_CATALOG
   })

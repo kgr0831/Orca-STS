@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { NativeChatMessage } from '../../../../shared/native-chat-types'
+import type { VoiceSettings } from '../../../../shared/speech-types'
 import { localKoreanVoice, StsVoicePlayback } from '../../../../shared/sts-voice-playback'
+import { playElevenLabsSpeech } from '../dictation/elevenlabs-playback'
 
 export function useNativeChatVoicePlayback(
   messages: readonly NativeChatMessage[],
   working: boolean,
-  enabled: boolean
+  enabled: boolean,
+  settings?: VoiceSettings
 ) {
   const [voice, setVoice] = useState<SpeechSynthesisVoice>()
   const [speaking, setSpeaking] = useState(false)
@@ -13,18 +16,22 @@ export function useNativeChatVoicePlayback(
   const [error, setError] = useState(false)
   const [revision, setRevision] = useState(0)
   const playback = useRef(new StsVoicePlayback())
-  const utterance = useRef<SpeechSynthesisUtterance | null>(null)
+  const current = useRef<{ cancel: () => void } | null>(null)
   const latest = useRef(messages)
   latest.current = messages
+  const cloud = settings?.ttsProvider === 'elevenlabs'
+  const voiceId = settings?.elevenLabsVoiceId ?? ''
+  const modelId = settings?.elevenLabsTtsModel ?? 'eleven_flash_v2_5'
+  const available = cloud
+    ? Boolean(
+        settings?.elevenLabsApiKeyConfigured && voiceId && window.api.speech.synthesizeElevenLabs
+      )
+    : Boolean(voice)
 
   const stop = useCallback(() => {
-    const current = utterance.current
-    utterance.current = null
-    if (current) {
-      current.onend = null
-      current.onerror = null
-      window.speechSynthesis?.cancel()
-    }
+    const active = current.current
+    current.current = null
+    active?.cancel()
     playback.current.reset(latest.current)
     setSpeaking(false)
     setCaption('')
@@ -45,10 +52,10 @@ export function useNativeChatVoicePlayback(
     playback.current.reset(latest.current)
     setError(false)
     return stop
-  }, [enabled, stop])
+  }, [enabled, cloud, voiceId, modelId, available, stop])
 
   useEffect(() => {
-    if (!enabled || !voice || error || utterance.current) {
+    if (!enabled || !available || error || current.current) {
       return
     }
     const next = playback.current.next(messages, working)
@@ -56,37 +63,45 @@ export function useNativeChatVoicePlayback(
       setSpeaking(false)
       return
     }
-    const current = new SpeechSynthesisUtterance(next)
-    current.voice = voice
-    current.lang = voice.lang
-    current.onend = () => {
-      if (utterance.current !== current) {
-        return
-      }
-      utterance.current = null
-      setRevision((value) => value + 1)
-    }
-    current.onerror = () => {
-      if (utterance.current !== current) {
-        return
-      }
-      utterance.current = null
+    const run = { cancel: () => {} }
+    current.current = run
+    const complete = (failed: boolean) => {
+      if (current.current !== run) return
+      current.current = null
       setSpeaking(false)
-      setError(true)
+      if (failed) setError(true)
+      else setRevision((value) => value + 1)
     }
-    utterance.current = current
     setSpeaking(true)
     setCaption(next)
     try {
-      window.speechSynthesis.speak(current)
+      if (cloud) {
+        run.cancel = playElevenLabsSpeech(
+          { text: next, voiceId, modelId },
+          () => complete(false),
+          () => complete(true)
+        )
+      } else if (voice) {
+        const utterance = new SpeechSynthesisUtterance(next)
+        utterance.voice = voice
+        utterance.lang = voice.lang
+        utterance.rate = 0.95
+        utterance.onend = () => complete(false)
+        utterance.onerror = () => complete(true)
+        run.cancel = () => {
+          utterance.onend = null
+          utterance.onerror = null
+          window.speechSynthesis.cancel()
+        }
+        window.speechSynthesis.speak(utterance)
+      }
     } catch {
-      utterance.current = null
-      setSpeaking(false)
-      setError(true)
+      run.cancel()
+      complete(true)
     }
-  }, [enabled, error, messages, revision, voice, working])
+  }, [enabled, available, cloud, error, messages, modelId, revision, voice, voiceId, working])
 
   const pending =
-    enabled && Boolean(voice) && !error && playback.current.hasPending(messages, working)
-  return { speaking, pending, caption, available: Boolean(voice), error, stop }
+    enabled && available && !error && playback.current.hasPending(messages, working)
+  return { speaking, pending, caption, available, error, stop }
 }

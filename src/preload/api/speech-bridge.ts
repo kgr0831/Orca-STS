@@ -1,6 +1,8 @@
 import type { SecretAtRestProtection } from '../../shared/secret-at-rest-protection'
 import { ipcRenderer } from 'electron'
 import type {
+  ElevenLabsSpeechRequest,
+  ElevenLabsVoice,
   SpeechErrorEvent,
   SpeechLifecycleEvent,
   SpeechModelManifest,
@@ -10,6 +12,18 @@ import type {
 import type { PreloadApi } from '../api-types'
 
 export const speechApi = {
+  getElevenLabsApiKeyStatus: (): Promise<{ configured: boolean }> =>
+    ipcRenderer.invoke('speech:getElevenLabsApiKeyStatus'),
+  saveElevenLabsApiKey: (key: string): Promise<{ configured: boolean }> =>
+    ipcRenderer.invoke('speech:saveElevenLabsApiKey', key),
+  clearElevenLabsApiKey: (): Promise<{ configured: boolean }> =>
+    ipcRenderer.invoke('speech:clearElevenLabsApiKey'),
+  listElevenLabsVoices: (): Promise<ElevenLabsVoice[]> =>
+    ipcRenderer.invoke('speech:listElevenLabsVoices'),
+  synthesizeElevenLabs: (request: ElevenLabsSpeechRequest): Promise<Uint8Array> =>
+    ipcRenderer.invoke('speech:synthesizeElevenLabs', request),
+  cancelElevenLabs: (requestId: string): Promise<void> =>
+    ipcRenderer.invoke('speech:cancelElevenLabs', requestId),
   getCatalog: (): Promise<SpeechModelManifest[]> => ipcRenderer.invoke('speech:getCatalog'),
   getModelStates: (): Promise<SpeechModelState[]> => ipcRenderer.invoke('speech:getModelStates'),
   getOpenAiApiKeyStatus: (): Promise<{

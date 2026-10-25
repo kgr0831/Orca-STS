@@ -8,6 +8,7 @@ import type {
 } from '../../shared/speech-types'
 import { SPEECH_MODEL_CATALOG, getCatalogModel, isLocalSpeechModel } from './model-catalog'
 import { hasOpenAiSpeechApiKey } from './openai-api-key-store'
+import { hasElevenLabsSpeechApiKey } from './elevenlabs-api-key-store'
 import {
   getSpeechModelCacheDirCandidates,
   migrateSpeechModelCacheIfNeeded,
@@ -38,7 +39,8 @@ export class ModelManager extends SpeechModelDownloadTransport {
   constructor(
     customModelsDir: string | undefined,
     openRequest: OpenSpeechDownloadRequest,
-    private readonly hasOpenAiKey: () => boolean = hasOpenAiSpeechApiKey
+    private readonly hasOpenAiKey: () => boolean = hasOpenAiSpeechApiKey,
+    private readonly hasElevenLabsKey: () => boolean = hasElevenLabsSpeechApiKey
   ) {
     super(openRequest)
     const requestedModelsDir =
@@ -105,6 +107,9 @@ export class ModelManager extends SpeechModelDownloadTransport {
 
     if (manifest.provider === 'openai') {
       return { id: modelId, status: this.hasOpenAiKey() ? 'ready' : 'not-downloaded' }
+    }
+    if (manifest.provider === 'elevenlabs') {
+      return { id: modelId, status: this.hasElevenLabsKey() ? 'ready' : 'not-downloaded' }
     }
 
     const modelDir = this.getModelDir(modelId)
