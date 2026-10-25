@@ -1,5 +1,6 @@
 {
   "stsLive": {
+    "elevenLabsStt": "ElevenLabs Scribe",
     "inputProvider": "Speech recognition",
     "localStt": "Local Korean recognition",
     "effortHint": "Lower reasoning effort reduces reply wait time. MAS keeps its separate specialist setting.",

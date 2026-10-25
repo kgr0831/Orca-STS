@@ -89,7 +89,6 @@ export function playElevenLabsStream(
     const source = context.createBufferSource()
     source.buffer = buffer
     source.connect(context.destination)
-    sources.add(source)
     source.onended = () => {
       sources.delete(source)
       source.disconnect()
@@ -97,6 +96,7 @@ export function playElevenLabsStream(
     }
     nextTime = Math.max(nextTime, context.currentTime + 0.025)
     source.start(nextTime)
+    sources.add(source)
     nextTime += buffer.duration
   }
 

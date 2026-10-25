@@ -22,14 +22,14 @@ export function NativeChatVoiceSettings({
       <p className="text-xs text-chat-foreground-faint">
         {translate('stsLive.inputProvider', 'Speech recognition')}:{' '}
         {voice?.sttModel === 'elevenlabs-scribe-v2-realtime'
-          ? 'ElevenLabs Scribe'
+          ? translate('stsLive.elevenLabsStt', 'ElevenLabs Scribe')
           : voice?.sttModel === 'zipformer-streaming-korean'
             ? translate('stsLive.localStt', 'Local Korean recognition')
             : voice?.sttModel || '—'}
         <br />
         {translate('elevenLabsVoice.output', 'Response voice (TTS)')}:{' '}
         {voice?.ttsProvider === 'elevenlabs'
-          ? 'ElevenLabs'
+          ? translate('elevenLabsVoice.cloud', 'ElevenLabs · account usage')
           : translate('elevenLabsVoice.local', 'Local system voice · free')}
       </p>
       <p className="text-xs text-chat-foreground-faint">
