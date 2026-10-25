@@ -29,6 +29,8 @@ const transport: NativeChatStructuredComposerTransport = {
 
 function Conversation(): React.JSX.Element {
   const [mode, setMode] = useState<StsWorkModeId>('brainstorm')
+  const [masEnabled, setMasEnabled] = useState(true)
+  const [model, setModel] = useState('auto')
   return (
     <div className="py-3">
       <NativeChatVoicePanel
@@ -52,7 +54,19 @@ function Conversation(): React.JSX.Element {
         transport={transport}
         onStopAgent={() => {}}
       />
-      <NativeChatWorkModePicker mode={mode} onChange={setMode} />
+      <NativeChatWorkModePicker
+        mode={mode}
+        onChange={setMode}
+        delegation={{
+          enabled: masEnabled,
+          onEnabledChange: setMasEnabled,
+          model,
+          onModelChange: setModel,
+          models: [{ value: 'gpt-6.1-sol', label: 'GPT-6.1 Sol' }],
+          automaticModel: 'gpt-6.1-sol',
+          onOpen: () => {}
+        }}
+      />
     </div>
   )
 }

@@ -63,6 +63,14 @@
     "general": {
       "label": "Tâches générales",
       "description": "Recherche, compare, planifie et réalise le travail demandé."
+    },
+    "mas": {
+      "label": "Déléguer les tâches difficiles (MAS)",
+      "model": "Modèle spécialiste",
+      "automatic": "Automatique",
+      "agentChoice": "Codex choisit",
+      "unlisted": "Absent du catalogue actuel",
+      "description": "Demandez à Codex de déléguer les recherches, les raisonnements complexes et les tâches détaillées avec un effort de raisonnement élevé. Deux spécialistes au maximum sont demandés simultanément. Leur activité réelle apparaît dans le chat. Consomme davantage de votre quota Codex."
     }
   },
   "app": {

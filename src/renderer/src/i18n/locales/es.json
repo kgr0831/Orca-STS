@@ -63,6 +63,14 @@
     "general": {
       "label": "Tareas generales",
       "description": "Investiga, compara, planifica y realiza el trabajo solicitado."
+    },
+    "mas": {
+      "label": "Delegar tareas difíciles (MAS)",
+      "model": "Modelo especialista",
+      "automatic": "Automático",
+      "agentChoice": "Codex elige",
+      "unlisted": "No está en el catálogo actual",
+      "description": "Solicita a Codex que delegue investigaciones, razonamientos complejos y tareas detalladas con un esfuerzo de razonamiento alto. Se solicitan como máximo dos especialistas a la vez; la actividad real aparece en el chat. Consume más de tu cuota de Codex."
     }
   },
   "app": {

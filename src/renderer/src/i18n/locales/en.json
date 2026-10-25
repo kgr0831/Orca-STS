@@ -63,6 +63,14 @@
     "general": {
       "label": "General tasks",
       "description": "Research, compare, plan, and carry out the requested work."
+    },
+    "mas": {
+      "label": "Delegate difficult work (MAS)",
+      "model": "Specialist model",
+      "automatic": "Automatic",
+      "agentChoice": "Codex chooses",
+      "unlisted": "Not in current catalog",
+      "description": "Ask Codex to delegate research, complex reasoning, and detailed tasks with high reasoning effort. Up to two specialists per request; actual activity appears in the chat. Uses more of your Codex allowance."
     }
   },
   "csv": {

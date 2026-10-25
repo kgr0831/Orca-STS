@@ -63,6 +63,14 @@
     "general": {
       "label": "一般任务",
       "description": "完成请求的调研、比较、规划等工作。"
+    },
+    "mas": {
+      "label": "委派复杂任务 (MAS)",
+      "model": "专业任务模型",
+      "automatic": "自动",
+      "agentChoice": "由Codex选择",
+      "unlisted": "不在当前列表中",
+      "description": "请求Codex以高推理强度委派研究、复杂推理和具体任务，同时最多请求两名子代理。实际活动会显示在聊天中，并消耗更多Codex额度。"
     }
   },
   "app": {

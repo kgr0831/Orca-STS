@@ -55,6 +55,8 @@ jobs:
       - name: Test voice modes and ElevenLabs contracts
         run: >-
           pnpm test src/shared/sts-work-modes.test.ts
+          src/shared/sts-delegation.test.ts
+          src/renderer/src/components/native-chat/use-native-chat-work-mode.test.tsx
           src/shared/sts-voice-playback.test.ts
           src/main/speech/elevenlabs-speech-client.test.ts
           src/main/speech/elevenlabs-transcription-session.test.ts

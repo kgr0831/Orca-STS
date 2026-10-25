@@ -9,6 +9,10 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { isStsWorkModeId, type StsWorkModeId } from '../../../../shared/sts-work-modes'
+import {
+  NativeChatDelegationOptions,
+  type NativeChatDelegationOptionsProps
+} from './NativeChatDelegationOptions'
 
 function workModeChoices(): { id: StsWorkModeId; label: string; description: string }[] {
   return [
@@ -90,6 +94,7 @@ function workModeChoices(): { id: StsWorkModeId; label: string; description: str
 export function NativeChatWorkModePicker(props: {
   mode: StsWorkModeId
   onChange: (mode: StsWorkModeId) => void
+  delegation?: NativeChatDelegationOptionsProps
 }): React.JSX.Element {
   const id = useId()
   const choices = workModeChoices()
@@ -124,6 +129,9 @@ export function NativeChatWorkModePicker(props: {
       <p id={`${id}-description`} className="text-xs text-muted-foreground">
         {selected?.description}
       </p>
+      {props.mode !== 'default' && props.delegation ? (
+        <NativeChatDelegationOptions {...props.delegation} />
+      ) : null}
     </div>
   )
 }

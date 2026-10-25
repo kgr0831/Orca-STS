@@ -1,3 +1,5 @@
+import { removeStsDelegation, withStsDelegation, type StsDelegation } from './sts-delegation'
+
 export const STS_WORK_MODE_IDS = [
   'default',
   'brainstorm',
@@ -18,9 +20,9 @@ export function isStsWorkModeId(value: string): value is StsWorkModeId {
 
 const MODE_INSTRUCTIONS: Record<Exclude<StsWorkModeId, 'default'>, string> = {
   brainstorm:
-    '브레인스토밍: 아이디어를 확장하고 대안과 장단점을 비교하세요. 핵심 질문을 한 번에 하나씩 하고 합의한 내용을 정리하세요. 아이디어나 가정을 실행 지시로 해석하지 말고 파일 수정과 명령 실행 없이 대화하세요.',
+    '브레인스토밍: 아이디어를 확장하고 대안과 장단점을 비교하세요. 핵심 질문을 한 번에 하나씩 하고 합의한 내용을 정리하세요. 아이디어나 가정을 실행 지시로 해석하지 말고 필요한 읽기·검색·조사·분석을 수행하세요. 파일 수정이나 상태를 변경하는 명령은 실행하지 마세요.',
   requirements:
-    '요구사항 정리: 목표, 사용자, 범위, 제약, 완료 기준을 구체화하세요. 확인된 요구와 가정을 구분하고 빠진 정보만 질문하세요. 파일 수정과 명령 실행 없이 요구사항 초안을 대화로 제시하세요.',
+    '요구사항 정리: 목표, 사용자, 범위, 제약, 완료 기준을 구체화하세요. 확인된 요구와 가정을 구분하고 빠진 정보만 질문하세요. 필요한 읽기·검색·분석 후 요구사항 초안을 대화로 제시하세요. 파일 수정이나 상태를 변경하는 명령은 실행하지 마세요.',
   design:
     '설계: 구조, 인터페이스, 데이터 흐름과 구현 순서를 검토하세요. 기존 코드와 문서를 읽어 근거를 찾고 대안의 장단점을 설명하세요. 파일을 수정하거나 상태를 변경하는 명령을 실행하지 마세요.',
   implement:
@@ -35,8 +37,13 @@ const MODE_INSTRUCTIONS: Record<Exclude<StsWorkModeId, 'default'>, string> = {
     '일반 작업: 조사, 비교, 계획, 체크리스트 등 요청한 업무를 수행하세요. 실행이 필요한지 대화나 초안만 필요한지 구분하고 요청한 범위에서만 행동하세요. 근거와 결과를 간결하게 정리하세요.'
 }
 
-export function withStsWorkMode(text: string, mode: StsWorkModeId, hasAttachments = false): string {
-  const request = removeStsWorkMode(text)
+export function withStsWorkMode(
+  text: string,
+  mode: StsWorkModeId,
+  hasAttachments = false,
+  delegation?: StsDelegation
+): string {
+  const request = removeStsWorkMode(removeStsDelegation(text))
   if (
     mode === 'default' ||
     (!request.trim() && !hasAttachments) ||
@@ -44,7 +51,7 @@ export function withStsWorkMode(text: string, mode: StsWorkModeId, hasAttachment
   ) {
     return request
   }
-  return `${workModePrefix(mode)}${request}`
+  return withStsDelegation(`${workModePrefix(mode)}${request}`, delegation)
 }
 
 function workModePrefix(mode: Exclude<StsWorkModeId, 'default'>): string {

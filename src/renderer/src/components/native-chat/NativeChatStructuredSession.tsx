@@ -386,7 +386,11 @@ export function NativeChatStructuredSession(
             />
           ) : null}
           {composerShown && props.agent === 'codex' ? (
-            <NativeChatWorkModePicker mode={workMode.mode} onChange={workMode.setMode} />
+            <NativeChatWorkModePicker
+              mode={workMode.mode}
+              onChange={workMode.setMode}
+              delegation={workMode.delegation}
+            />
           ) : null}
           {composerShown ? (
             <NativeChatComposer
