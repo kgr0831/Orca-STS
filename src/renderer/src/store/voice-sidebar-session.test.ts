@@ -1,6 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 import { LOCAL_EXECUTION_HOST_ID, toRuntimeExecutionHostId } from '../../../shared/execution-host'
-import { openVoiceSidebarSession, useVoiceSidebarSessions } from './voice-sidebar-session'
+import { openVoiceSidebarSession } from './voice-sidebar-session'
+import { useVoiceSidebarSessions } from './voice-sidebar-state'
 
 const fakes = vi.hoisted(() => ({ launch: vi.fn(), plan: vi.fn(() => ({})) }))
 vi.mock('@/store', () => ({ useAppStore: { getState: () => ({}) } }))

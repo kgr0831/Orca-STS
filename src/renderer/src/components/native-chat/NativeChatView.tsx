@@ -7,7 +7,7 @@ import { NativeChatPaneFileDropSurface } from './NativeChatPaneFileDropSurface'
 import { NativeChatVisualOwnerProvider } from './native-chat-visual-owner'
 import { NativeChatFileLinkExistenceProvider } from './use-native-chat-file-link-existence'
 import { NativeChatMarkdownImageOwnerProvider } from './native-chat-markdown-image-owner'
-import { useVoiceSidebarSessions } from '@/store/voice-sidebar-session'
+import { useVoiceSidebarSessions } from '@/store/voice-sidebar-state'
 import { translate } from '@/i18n/i18n'
 
 export type { NativeChatViewProps } from './native-chat-view-types'

@@ -1,4 +1,3 @@
-import { create } from 'zustand'
 import { useAppStore } from '@/store'
 import { planAgentSessionLaunch } from '@/lib/agent-session-launch-plan'
 import { worktreeLaunchWorkspace } from '@/lib/agent-launch-route-input'
@@ -7,17 +6,7 @@ import { beginStructuredAgentSessionProvisionalLaunch } from '@/lib/agent-sessio
 import { resolveStructuredAgentSessionOwner } from '@/runtime/structured-agent-session-owner'
 import { structuredAgentSessionTabId } from '../../../shared/structured-agent-session-projection'
 import type { ExecutionHostId } from '../../../shared/execution-host'
-
-type VoiceSession = { sessionId: string; tabId: string; executionHostId: ExecutionHostId }
-type VoiceSessionEntry =
-  | { status: 'opening' }
-  | { status: 'ready'; session: VoiceSession }
-  | { status: 'failed' }
-
-export const useVoiceSidebarSessions = create<{
-  entries: Record<string, VoiceSessionEntry>
-  mountedTabId: string | null
-}>(() => ({ entries: {}, mountedTabId: null }))
+import { useVoiceSidebarSessions, type VoiceSessionEntry } from './voice-sidebar-state'
 
 export function useVoiceSidebarWorkspace() {
   const worktreeId = useAppStore((s) => s.activeWorktreeId)

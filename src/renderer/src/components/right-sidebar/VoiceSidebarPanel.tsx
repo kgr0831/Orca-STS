@@ -5,11 +5,8 @@ import NativeChatView from '@/components/native-chat/NativeChatView'
 import { useNativeChatTabOwnerWorktreeId } from '@/components/native-chat/use-native-chat-tab-owner'
 import { useAppStore } from '@/store'
 import { translate } from '@/i18n/i18n'
-import {
-  openVoiceSidebarSession,
-  useVoiceSidebarSessions,
-  useVoiceSidebarWorkspace
-} from '@/store/voice-sidebar-session'
+import { openVoiceSidebarSession, useVoiceSidebarWorkspace } from '@/store/voice-sidebar-session'
+import { useVoiceSidebarSessions } from '@/store/voice-sidebar-state'
 import { structuredAgentSessionTargetForHost } from '@/runtime/structured-agent-session-owner'
 
 export default function VoiceSidebarPanel(): React.JSX.Element {
