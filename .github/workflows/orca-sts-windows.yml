@@ -1,4 +1,4 @@
-name: Orca-STS Windows validation
+name: Orca-STS validation and Windows build
 
 on:
   push:
@@ -14,6 +14,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  checks:
+    if: github.repository == 'kgr0831/orca' || github.repository == 'kgr0831/Orca-STS'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      ORCA_BACKGROUND_LAUNCH: '1'
+      NODE_OPTIONS: --max-old-space-size=6144
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/install-node-dependencies
+        with:
+          native-runtime: node
+          cache-electron-package: 'true'
+
+      - name: Install Electron package binary for tests
+        run: node config/scripts/install-electron-package-binary.mjs
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: config/.bun-version
+
+      - uses: ./.github/actions/install-mobile-dependencies
+
+      # The root unit suite uses the same Linux environment as upstream unit-tests.yml.
+      - name: Check the change against the fork base
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha || format('origin/{0}', github.event.repository.default_branch) }}
+        run: pnpm check:changed --base="$BASE_REF" --maxWorkers=4
+
   windows:
     if: github.repository == 'kgr0831/orca' || github.repository == 'kgr0831/Orca-STS'
     runs-on: windows-2022
@@ -47,16 +80,12 @@ jobs:
 
       - uses: ./.github/actions/install-mobile-dependencies
 
-      - name: Check the change against the fork base
-        env:
-          BASE_REF: ${{ github.event.pull_request.base.sha || format('origin/{0}', github.event.repository.default_branch) }}
-        run: pnpm check:changed --base="$BASE_REF" --maxWorkers=4
-
       - name: Test voice modes and ElevenLabs contracts
         run: >-
           pnpm test src/shared/sts-work-modes.test.ts
           src/shared/sts-delegation.test.ts
           src/renderer/src/components/native-chat/use-native-chat-work-mode.test.tsx
+          src/renderer/src/components/native-chat/NativeChatStructuredSession.availability-notice.test.tsx
           src/shared/sts-voice-playback.test.ts
           src/main/speech/elevenlabs-speech-client.test.ts
           src/main/speech/elevenlabs-transcription-session.test.ts

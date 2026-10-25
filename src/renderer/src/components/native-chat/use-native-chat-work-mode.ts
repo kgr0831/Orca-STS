@@ -25,17 +25,17 @@ export function useNativeChatWorkMode(
     }
     return {
       ...transport,
-      send: (text, attachments, request) =>
-        transport.send(
-          withStsWorkMode(
-            text,
-            mode,
-            attachments.length > 0,
-            delegationEnabled ? { model: specialistModel } : undefined
-          ),
-          attachments,
-          request
+      send: (text, attachments, request) => {
+        const message = withStsWorkMode(
+          text,
+          mode,
+          attachments.length > 0,
+          delegationEnabled ? { model: specialistModel } : undefined
         )
+        return request === undefined
+          ? transport.send(message, attachments)
+          : transport.send(message, attachments, request)
+      }
     }
   }, [enabled, mode, transport, delegationEnabled, specialistModel])
   return {

@@ -32,7 +32,7 @@ describe('the Codex work mode composer', () => {
     const { send, transport } = transportFixture()
     const { result } = renderHook(() => useNativeChatWorkMode(transport, true))
     result.current.transport.send('원래 요청', [])
-    expect(send).toHaveBeenLastCalledWith('원래 요청', [], undefined)
+    expect(send).toHaveBeenLastCalledWith('원래 요청', [])
     send.mockClear()
     act(() => result.current.setMode('brainstorm'))
     expect(send).not.toHaveBeenCalled()
@@ -64,12 +64,11 @@ describe('the Codex work mode composer', () => {
     expect(result.current.transport.send('검토해줘', [])).toBe(false)
     expect(send).toHaveBeenLastCalledWith(
       withStsWorkMode('검토해줘', 'review', false, { model: null }),
-      [],
-      undefined
+      []
     )
     act(() => result.current.setMode('default'))
     result.current.transport.send(withStsWorkMode('검토해줘', 'review'), [])
-    expect(send).toHaveBeenLastCalledWith('검토해줘', [], undefined)
+    expect(send).toHaveBeenLastCalledWith('검토해줘', [])
   })
 
   it('does not apply modes to other providers or change host permission gates', () => {
@@ -128,8 +127,8 @@ describe('the Codex work mode composer', () => {
     expect(sent).toContain('"model":"specialist-model"')
     act(() => result.current.delegation.onEnabledChange(false))
     result.current.transport.send(sent ?? '', [])
-    expect(send).toHaveBeenLastCalledWith(withStsWorkMode('구현해줘', 'implement'), [], undefined)
+    expect(send).toHaveBeenLastCalledWith(withStsWorkMode('구현해줘', 'implement'), [])
     result.current.transport.send('/compact', [])
-    expect(send).toHaveBeenLastCalledWith('/compact', [], undefined)
+    expect(send).toHaveBeenLastCalledWith('/compact', [])
   })
 })
