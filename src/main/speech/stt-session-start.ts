@@ -32,7 +32,9 @@ export async function startSttDictation(
   hotwordsFilePath?: string,
   owner = 'desktop'
 ): Promise<void> {
-  if (state.cloudStopInFlight) throw new Error('dictation_stopping')
+  if (state.cloudStopInFlight) {
+    throw new Error('dictation_stopping')
+  }
   if (state.starting) {
     if (state.startingOwner !== owner) {
       throw new Error('dictation_already_active')
@@ -87,7 +89,9 @@ async function startSttSession(
     if (modelState.status !== 'ready') {
       throw new Error(`Model not ready: ${modelState.status}`)
     }
-    if (state.canceledOwners.has(owner)) throw new Error('dictation_canceled')
+    if (state.canceledOwners.has(owner)) {
+      throw new Error('dictation_canceled')
+    }
     if (manifest.provider === 'elevenlabs') {
       const apiKey = readElevenLabsSpeechApiKey()
       const session = new ElevenLabsTranscriptionSession(sink)
@@ -99,7 +103,9 @@ async function startSttSession(
           throw new Error('dictation_canceled')
         }
       } catch (error) {
-        if (state.cloudSession === session) state.cloudSession = null
+        if (state.cloudSession === session) {
+          state.cloudSession = null
+        }
         throw error
       }
     } else {

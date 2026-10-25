@@ -35,11 +35,7 @@ const MODE_INSTRUCTIONS: Record<Exclude<StsWorkModeId, 'default'>, string> = {
     '일반 작업: 조사, 비교, 계획, 체크리스트 등 요청한 업무를 수행하세요. 실행이 필요한지 대화나 초안만 필요한지 구분하고 요청한 범위에서만 행동하세요. 근거와 결과를 간결하게 정리하세요.'
 }
 
-export function withStsWorkMode(
-  text: string,
-  mode: StsWorkModeId,
-  hasAttachments = false
-): string {
+export function withStsWorkMode(text: string, mode: StsWorkModeId, hasAttachments = false): string {
   const request = removeStsWorkMode(text)
   if (
     mode === 'default' ||

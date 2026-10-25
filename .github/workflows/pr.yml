@@ -18,6 +18,10 @@ permissions:
   contents: read
 
 jobs:
+  fork_windows:
+    if: github.repository == 'kgr0831/Orca-STS' && github.event.pull_request.draft != true
+    uses: ./.github/workflows/orca-sts-windows.yml
+
   # Why: a README/docs-only PR used to start the full matrix (test shards,
   # two package jobs, typecheck, git compat, xterm, shell contracts). Path
   # filters on `on.pull_request` would drop the `verify` check entirely; this
@@ -25,7 +29,7 @@ jobs:
   # Per-job outputs also skip git-compat/xterm/packaging/shell when those
   # inputs are unchanged; empty diffs fail closed and run everything.
   code_paths:
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft != true
+    if: github.repository != 'kgr0831/Orca-STS' && (github.event_name != 'pull_request' || github.event.pull_request.draft != true)
     name: detect changes and check repository guards
     # Start routing without waiting behind the GitHub-hosted test queue.
     runs-on: blacksmith-2vcpu-ubuntu-2404
@@ -1594,6 +1598,7 @@ jobs:
     # Publish an explicit result after every required dependency settles.
     if: ${{ !cancelled() && github.event.pull_request.draft != true }}
     needs:
+      - fork_windows
       - code_paths
       - preflight
       - git_compatibility
@@ -1609,10 +1614,16 @@ jobs:
       - layout_oracle
       - dependency_isolation
     # Report settled results without competing with the GitHub-hosted test queue.
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: ${{ github.repository == 'kgr0831/Orca-STS' && 'ubuntu-latest' || 'blacksmith-2vcpu-ubuntu-2204' }}
     timeout-minutes: 5
 
     steps:
+      - name: Require the fork Windows checks and installer
+        if: github.repository == 'kgr0831/Orca-STS'
+        env:
+          FORK_WINDOWS: ${{ needs.fork_windows.result }}
+        run: test "$FORK_WINDOWS" = success
+
       # Why: e2e is deliberately absent from needs. The suite is currently red on
       # main (every scheduled run), so gating merges on it would block any PR that
       # touches tests/e2e/** — including the ones fixing the suite. Until it is
@@ -1622,6 +1633,7 @@ jobs:
       # result for a path-filtered job and must keep passing, so it has to be
       # checked outside the loop or it would excuse the jobs above.
       - name: Require successful checks
+        if: github.repository != 'kgr0831/Orca-STS'
         env:
           CODE_PATHS: ${{ needs.code_paths.result }}
           SHOULD_RUN: ${{ needs.code_paths.outputs.should_run }}

@@ -22,7 +22,8 @@
     "start": "开始说话",
     "send": "发送文本",
     "pause": "暂停语音对话",
-    "stopAgent": "停止 Codex"
+    "stopAgent": "停止 Codex",
+    "assistant": "Codex"
   },
   "stsWorkModes": {
     "label": "工作模式",
@@ -21269,6 +21270,8 @@
     "sample": "你好。让我们从容地整理想法，一起确定下一步要做什么。",
     "keyError": "无法更新密钥。请停止听写并检查加密存储是否可用。",
     "listError": "无法加载声音。请检查密钥、Voices 读取权限和网络连接。",
-    "previewError": "试听失败。请检查 Voice ID、TTS 权限、额度和连接。"
+    "previewError": "试听失败。请检查 Voice ID、TTS 权限、额度和连接。",
+    "flash": "Flash v2.5",
+    "multilingual": "Multilingual v2"
   }
 }

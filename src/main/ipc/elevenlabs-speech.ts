@@ -21,9 +21,13 @@ export function registerElevenLabsSpeechHandlers(store: Store): void {
     task: (signal: AbortSignal) => Promise<T>
   ): Promise<T> {
     const key = `${sender.id}:${id}`
-    if (sender.isDestroyed() || requests.has(key)) throw new Error('elevenlabs_request_busy')
+    if (sender.isDestroyed() || requests.has(key)) {
+      throw new Error('elevenlabs_request_busy')
+    }
     const owned = [...requests.keys()].filter((entry) => entry.startsWith(`${sender.id}:`))
-    if (owned.length >= 2) throw new Error('elevenlabs_request_busy')
+    if (owned.length >= 2) {
+      throw new Error('elevenlabs_request_busy')
+    }
     const controller = new AbortController()
     requests.set(key, controller)
     const cancel = () => controller.abort()
@@ -38,7 +42,9 @@ export function registerElevenLabsSpeechHandlers(store: Store): void {
 
   async function prepareKeyChange(): Promise<void> {
     await getSpeechSttService(store).prepareModelForDeletion('elevenlabs-scribe-v2-realtime')
-    for (const controller of requests.values()) controller.abort()
+    for (const controller of requests.values()) {
+      controller.abort()
+    }
   }
 
   ipcMain.handle('speech:getElevenLabsApiKeyStatus', () => ({
@@ -62,6 +68,8 @@ export function registerElevenLabsSpeechHandlers(store: Store): void {
     return run(event.sender, input.requestId, (signal) => synthesizeElevenLabsSpeech(input, signal))
   })
   ipcMain.handle('speech:cancelElevenLabs', (event, id: unknown) => {
-    if (typeof id === 'string') requests.get(`${event.sender.id}:${id}`)?.abort()
+    if (typeof id === 'string') {
+      requests.get(`${event.sender.id}:${id}`)?.abort()
+    }
   })
 }

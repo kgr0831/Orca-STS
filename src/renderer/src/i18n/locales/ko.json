@@ -22,7 +22,8 @@
     "start": "말하기 시작",
     "send": "텍스트 보내기",
     "pause": "음성 대화 일시정지",
-    "stopAgent": "Codex 작업 중단"
+    "stopAgent": "Codex 작업 중단",
+    "assistant": "Codex"
   },
   "stsWorkModes": {
     "label": "작업 모드",
@@ -21269,6 +21270,8 @@
     "sample": "안녕하세요. 편안하게 아이디어를 정리하고, 다음에 할 일을 함께 살펴보겠습니다.",
     "keyError": "키를 변경하지 못했습니다. 받아쓰기를 중지하고 암호화 저장소를 사용할 수 있는지 확인하세요.",
     "listError": "목소리를 불러오지 못했습니다. 키, Voices 읽기 권한과 인터넷 연결을 확인하세요.",
-    "previewError": "미리듣기에 실패했습니다. Voice ID, TTS 권한, 잔여 사용량과 연결을 확인하세요."
+    "previewError": "미리듣기에 실패했습니다. Voice ID, TTS 권한, 잔여 사용량과 연결을 확인하세요.",
+    "flash": "Flash v2.5",
+    "multilingual": "Multilingual v2"
   }
 }

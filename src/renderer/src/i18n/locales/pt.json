@@ -22,7 +22,8 @@
     "start": "Começar a falar",
     "send": "Enviar texto",
     "pause": "Pausar conversa",
-    "stopAgent": "Parar Codex"
+    "stopAgent": "Parar Codex",
+    "assistant": "Codex"
   },
   "stsWorkModes": {
     "label": "Modo de trabalho",
@@ -21280,6 +21281,8 @@
     "sample": "Olá. Vamos organizar suas ideias com calma e decidir o que fazer em seguida.",
     "keyError": "Não foi possível atualizar a chave. Pare o ditado e verifique o armazenamento criptografado.",
     "listError": "Não foi possível carregar as vozes. Verifique a chave, a permissão de leitura de Voices e a conexão.",
-    "previewError": "Falha na prévia. Verifique o Voice ID, a permissão TTS, a cota e a conexão."
+    "previewError": "Falha na prévia. Verifique o Voice ID, a permissão TTS, a cota e a conexão.",
+    "flash": "Flash v2.5",
+    "multilingual": "Multilingual v2"
   }
 }

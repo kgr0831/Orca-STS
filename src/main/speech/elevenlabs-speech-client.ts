@@ -54,18 +54,26 @@ async function request(path: string, options: RequestInit, signal: AbortSignal):
 
 async function readBody(response: Response): Promise<Buffer> {
   const reader = response.body?.getReader()
-  if (!reader) throw new Error('elevenlabs_empty_response')
+  if (!reader) {
+    throw new Error('elevenlabs_empty_response')
+  }
   const chunks: Uint8Array[] = []
   let size = 0
   try {
     while (true) {
       const { value, done } = await reader.read()
-      if (done) break
+      if (done) {
+        break
+      }
       size += value.byteLength
-      if (size > MAX_RESPONSE_BYTES) throw new Error('elevenlabs_response_too_large')
+      if (size > MAX_RESPONSE_BYTES) {
+        throw new Error('elevenlabs_response_too_large')
+      }
       chunks.push(value)
     }
-    if (!size) throw new Error('elevenlabs_empty_response')
+    if (!size) {
+      throw new Error('elevenlabs_empty_response')
+    }
     return Buffer.concat(chunks)
   } catch {
     await reader.cancel().catch(() => undefined)

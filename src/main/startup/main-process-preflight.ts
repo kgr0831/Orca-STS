@@ -161,7 +161,7 @@ function initializeMainProcessPreflight(options: MainProcessPreflightOptions): b
   if (state.isServeMode) {
     reserveServeStdoutForReadiness()
   }
-  state.devInstanceIdentity = getDevInstanceIdentity(isDev)
+  state.devInstanceIdentity = getDevInstanceIdentity(isDev, process.env, app.getVersion())
   state.devAgentHookEndpointNamespace = state.devInstanceIdentity.isDev
     ? state.devInstanceIdentity.appUserModelId
     : undefined

@@ -29,6 +29,8 @@ export function registerDictationConversationTarget(
   }
 }
 
-export function getDictationConversationTarget(element: Element): DictationConversationTarget | null {
+export function getDictationConversationTarget(
+  element: Element
+): DictationConversationTarget | null {
   return targets.get(element) ?? null
 }

@@ -34,6 +34,32 @@ describe('updater', () => {
     resetUpdaterMocks()
   })
 
+  it('keeps an STS distribution out of upstream and local automatic update paths', async () => {
+    appMock.getVersion.mockReturnValue('1.4.214-sts.1')
+    const updater = await loadUpdaterModule()
+    updater.setupAutoUpdater(null)
+    updater.checkForUpdates()
+
+    for (const channel of ['stable', 'rc', 'hourly', 'daily', 'adhoc'] as const) {
+      expect(await updater.listAvailableReleaseBuilds(channel)).toEqual([])
+      updater.checkForUpdatesFromMenu({ channel, targetTag: 'v99.0.0' })
+    }
+    updater.checkForUpdatesFromMenu({ localBuild: true })
+    updater.downloadUpdate()
+    updater.quitAndInstall()
+
+    expect(updater.getUpdateStatus()).toMatchObject({
+      state: 'error',
+      message: expect.stringContaining('https://github.com/kgr0831/Orca-STS/releases')
+    })
+    expect(autoUpdaterMock.setFeedURL).not.toHaveBeenCalled()
+    expect(autoUpdaterMock.checkForUpdates).not.toHaveBeenCalled()
+    expect(autoUpdaterMock.downloadUpdate).not.toHaveBeenCalled()
+    expect(autoUpdaterMock.quitAndInstall).not.toHaveBeenCalled()
+    expect(fetchNewerReleaseTagsMock).not.toHaveBeenCalled()
+    expect(chooseLocalBuildMock).not.toHaveBeenCalled()
+  })
+
   it.each([
     [
       'hourly',

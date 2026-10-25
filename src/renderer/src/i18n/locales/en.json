@@ -22,7 +22,8 @@
     "start": "Start speaking",
     "send": "Send text",
     "pause": "Pause conversation",
-    "stopAgent": "Stop Codex"
+    "stopAgent": "Stop Codex",
+    "assistant": "Codex"
   },
   "stsWorkModes": {
     "label": "Work mode",
@@ -21363,6 +21364,8 @@
     "model": "TTS model",
     "stop": "Stop preview",
     "preview": "Preview · uses credits",
-    "tone": "Calm, clear delivery with a slightly slower pace. Preview a Korean voice from your account before selecting it."
+    "tone": "Calm, clear delivery with a slightly slower pace. Preview a Korean voice from your account before selecting it.",
+    "flash": "Flash v2.5",
+    "multilingual": "Multilingual v2"
   }
 }

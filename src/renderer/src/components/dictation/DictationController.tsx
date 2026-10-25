@@ -13,7 +13,7 @@ import { recordStoppedSession, waitForStoppedSession } from './dictation-stopped
 import { translate } from '@/i18n/i18n'
 import { showDictationStartErrorToast } from './dictation-start-error-toast'
 import { useHoldDictationGesture } from './use-hold-dictation-gesture'
-import { DICTATION_CONTROL_EVENT, type DictationControlAction } from './dictation-control-events'
+import { useDictationControl } from './use-dictation-control'
 import { publishDictationMeter } from './dictation-meter-store'
 
 export function DictationController() {
@@ -318,34 +318,12 @@ export function DictationController() {
     stopDictation
   ])
 
-  useEffect(() => {
-    const canDictate = (): boolean => Boolean(settings?.voice?.enabled && settings.voice.sttModel)
-    const handleControl = (event: Event): void => {
-      if (!canDictate() || dictationStateRef.current === 'stopping') {
-        return
-      }
-      const action = (event as CustomEvent<DictationControlAction>).detail
-      if (action === 'start') {
-        if (dictationStateRef.current === 'idle') {
-          void startDictation()
-        }
-        return
-      }
-      if (action === 'stop') {
-        if (dictationStateRef.current === 'listening' || dictationStateRef.current === 'starting') {
-          void stopDictation()
-        }
-        return
-      }
-      if (dictationStateRef.current === 'listening' || dictationStateRef.current === 'starting') {
-        void stopDictation()
-      } else {
-        void startDictation()
-      }
-    }
-    document.addEventListener(DICTATION_CONTROL_EVENT, handleControl)
-    return () => document.removeEventListener(DICTATION_CONTROL_EVENT, handleControl)
-  }, [settings?.voice?.enabled, settings?.voice?.sttModel, startDictation, stopDictation])
+  useDictationControl({
+    enabled: Boolean(settings?.voice?.enabled && settings.voice.sttModel),
+    state: dictationStateRef,
+    start: startDictation,
+    stop: stopDictation
+  })
 
   useHoldDictationGesture({
     dictationStateRef,

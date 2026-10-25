@@ -1,7 +1,13 @@
 import { useId } from 'react'
 import { translate } from '@/i18n/i18n'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { isStsWorkModeId, type StsWorkModeId } from '../../../../shared/sts-work-modes'
 
 function workModeChoices(): { id: StsWorkModeId; label: string; description: string }[] {
@@ -91,9 +97,7 @@ export function NativeChatWorkModePicker(props: {
   return (
     <div className="mx-3 mb-2 space-y-2 rounded-md border border-border bg-card p-3 text-card-foreground">
       <div className="flex flex-wrap items-center gap-2">
-        <Label htmlFor={id} className="text-sm">
-          {translate('stsWorkModes.label', 'Work mode')}
-        </Label>
+        <Label htmlFor={id}>{translate('stsWorkModes.label', 'Work mode')}</Label>
         <Select
           value={props.mode}
           onValueChange={(value) => {

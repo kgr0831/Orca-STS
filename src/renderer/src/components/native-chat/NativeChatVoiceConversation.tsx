@@ -54,6 +54,8 @@ export function NativeChatVoiceConversation(
       setAwaiting(false)
     }
   })
+  const { cancel: cancelInput, start: startInput } = input
+  const { stop: stopPlayback } = playback
   const canSend =
     props.active &&
     !props.blocked &&
@@ -144,6 +146,7 @@ export function NativeChatVoiceConversation(
   useEffect(() => {
     if (!props.active || props.blocked) {
       conversationRun.current += 1
+      // oxlint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- Losing microphone ownership must cancel the next automatic turn.
       setAwaiting(false)
     }
   }, [props.active, props.blocked])
@@ -153,8 +156,8 @@ export function NativeChatVoiceConversation(
       conversationRun.current += 1
       setMuted(true)
       setAwaiting(false)
-      playback.stop()
-      input.cancel()
+      stopPlayback()
+      cancelInput()
     }
     const visibilityChanged = () => {
       if (document.visibilityState !== 'visible') {
@@ -167,7 +170,7 @@ export function NativeChatVoiceConversation(
       window.removeEventListener('blur', pause)
       document.removeEventListener('visibilitychange', visibilityChanged)
     }
-  }, [input.cancel, playback.stop])
+  }, [cancelInput, stopPlayback])
 
   useEffect(() => {
     if (
@@ -186,7 +189,7 @@ export function NativeChatVoiceConversation(
     }
     const timer = setTimeout(() => {
       setAwaiting(false)
-      input.start()
+      startInput()
     }, 500)
     return () => clearTimeout(timer)
   }, [
@@ -196,7 +199,7 @@ export function NativeChatVoiceConversation(
     input.draft,
     input.error,
     input.ready,
-    input.start,
+    startInput,
     input.state,
     playback.speaking,
     playback.pending
@@ -223,7 +226,7 @@ export function NativeChatVoiceConversation(
           : translate('stsVoice.ready', 'Ready')
 
   return (
-    <div className="scrollbar-sleek mt-3 max-h-80 space-y-3 overflow-y-auto pr-1">
+    <div className="mt-3 space-y-3">
       <p role="status" className="text-xs text-muted-foreground">
         {stateLabel}
       </p>
@@ -249,7 +252,7 @@ export function NativeChatVoiceConversation(
         </div>
       ) : null}
       <div className="flex flex-wrap gap-3">
-        <Label className="text-xs" htmlFor={`${id}-auto`}>
+        <Label htmlFor={`${id}-auto`}>
           <Checkbox
             id={`${id}-auto`}
             checked={automatic}
@@ -257,7 +260,7 @@ export function NativeChatVoiceConversation(
           />
           {translate('stsVoice.automatic', 'Send after a pause and listen again after the reply')}
         </Label>
-        <Label className="text-xs" htmlFor={`${id}-read`}>
+        <Label htmlFor={`${id}-read`}>
           <Checkbox
             id={`${id}-read`}
             checked={readAloud}
@@ -289,11 +292,12 @@ export function NativeChatVoiceConversation(
         value={input.draft}
         readOnly={input.owned || sending}
         onChange={(event) => input.setDraft(event.target.value)}
-        className="text-sm"
         rows={2}
       />
       {input.partial ? <p className="text-sm text-muted-foreground">{input.partial}</p> : null}
-      {!input.draft && lastSent ? <p className="text-xs text-muted-foreground">{lastSent}</p> : null}
+      {!input.draft && lastSent ? (
+        <p className="text-xs text-muted-foreground">{lastSent}</p>
+      ) : null}
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
@@ -353,7 +357,9 @@ export function NativeChatVoiceConversation(
       ) : null}
       {caption ? (
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Codex</p>
+          <p className="text-xs text-muted-foreground">
+            {translate('stsVoice.assistant', 'Codex')}
+          </p>
           <p className="scrollbar-sleek max-h-32 overflow-y-auto whitespace-pre-wrap text-sm">
             {caption}
           </p>

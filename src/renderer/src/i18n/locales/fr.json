@@ -22,7 +22,8 @@
     "start": "Commencer à parler",
     "send": "Envoyer le texte",
     "pause": "Suspendre la conversation",
-    "stopAgent": "Arrêter Codex"
+    "stopAgent": "Arrêter Codex",
+    "assistant": "Codex"
   },
   "stsWorkModes": {
     "label": "Mode de travail",
@@ -21270,6 +21271,8 @@
     "sample": "Bonjour. Organisons calmement vos idées et décidons ensemble de la prochaine étape.",
     "keyError": "Impossible de modifier la clé. Arrêtez la dictée et vérifiez le stockage chiffré.",
     "listError": "Impossible de charger les voix. Vérifiez la clé, le droit de lecture Voices et la connexion.",
-    "previewError": "Échec de l’aperçu. Vérifiez le Voice ID, les droits TTS, le quota et la connexion."
+    "previewError": "Échec de l’aperçu. Vérifiez le Voice ID, les droits TTS, le quota et la connexion.",
+    "flash": "Flash v2.5",
+    "multilingual": "Multilingual v2"
   }
 }

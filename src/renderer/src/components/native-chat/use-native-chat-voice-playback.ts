@@ -37,6 +37,21 @@ export function useNativeChatVoicePlayback(
     setCaption('')
   }, [])
 
+  const complete = useCallback((run: { cancel: () => void }, failed: boolean) => {
+    if (current.current !== run) {
+      return
+    }
+    current.current = null
+    // oxlint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- Audio completion and synchronous playback failure must release the microphone gate.
+    setSpeaking(false)
+    if (failed) {
+      // oxlint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- Report an external playback failure, including a synchronous audio API exception.
+      setError(true)
+    } else {
+      setRevision((value) => value + 1)
+    }
+  }, [])
+
   useEffect(() => {
     const synth = window.speechSynthesis
     if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
@@ -60,34 +75,27 @@ export function useNativeChatVoicePlayback(
     }
     const next = playback.current.next(messages, working)
     if (!next) {
-      setSpeaking(false)
       return
     }
     const run = { cancel: () => {} }
     current.current = run
-    const complete = (failed: boolean) => {
-      if (current.current !== run) return
-      current.current = null
-      setSpeaking(false)
-      if (failed) setError(true)
-      else setRevision((value) => value + 1)
-    }
+    // oxlint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- Starting external audio must disable microphone capture immediately.
     setSpeaking(true)
     setCaption(next)
     try {
       if (cloud) {
         run.cancel = playElevenLabsSpeech(
           { text: next, voiceId, modelId },
-          () => complete(false),
-          () => complete(true)
+          () => complete(run, false),
+          () => complete(run, true)
         )
       } else if (voice) {
         const utterance = new SpeechSynthesisUtterance(next)
         utterance.voice = voice
         utterance.lang = voice.lang
         utterance.rate = 0.95
-        utterance.onend = () => complete(false)
-        utterance.onerror = () => complete(true)
+        utterance.onend = () => complete(run, false)
+        utterance.onerror = () => complete(run, true)
         run.cancel = () => {
           utterance.onend = null
           utterance.onerror = null
@@ -97,11 +105,22 @@ export function useNativeChatVoicePlayback(
       }
     } catch {
       run.cancel()
-      complete(true)
+      complete(run, true)
     }
-  }, [enabled, available, cloud, error, messages, modelId, revision, voice, voiceId, working])
+  }, [
+    enabled,
+    available,
+    cloud,
+    error,
+    messages,
+    modelId,
+    revision,
+    voice,
+    voiceId,
+    working,
+    complete
+  ])
 
-  const pending =
-    enabled && available && !error && playback.current.hasPending(messages, working)
+  const pending = enabled && available && !error && playback.current.hasPending(messages, working)
   return { speaking, pending, caption, available, error, stop }
 }

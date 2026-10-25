@@ -22,7 +22,8 @@
     "start": "発話を開始",
     "send": "テキストを送信",
     "pause": "音声会話を一時停止",
-    "stopAgent": "Codex を停止"
+    "stopAgent": "Codex を停止",
+    "assistant": "Codex"
   },
   "stsWorkModes": {
     "label": "作業モード",
@@ -21269,6 +21270,8 @@
     "sample": "こんにちは。落ち着いてアイデアを整理し、次に取り組むことを一緒に考えましょう。",
     "keyError": "キーを更新できませんでした。音声入力を停止し、暗号化ストレージを確認してください。",
     "listError": "音声を取得できませんでした。キー、Voices読み取り権限、接続を確認してください。",
-    "previewError": "試聴に失敗しました。Voice ID、TTS権限、利用枠、接続を確認してください。"
+    "previewError": "試聴に失敗しました。Voice ID、TTS権限、利用枠、接続を確認してください。",
+    "flash": "Flash v2.5",
+    "multilingual": "Multilingual v2"
   }
 }

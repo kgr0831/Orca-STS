@@ -37,7 +37,9 @@ export function readElevenLabsSpeechApiKey(): string {
 }
 
 export function canReadElevenLabsSpeechApiKey(): boolean {
-  if (!hasElevenLabsSpeechApiKey()) return false
+  if (!hasElevenLabsSpeechApiKey()) {
+    return false
+  }
   try {
     return Boolean(readElevenLabsSpeechApiKey())
   } catch {

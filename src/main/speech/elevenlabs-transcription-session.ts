@@ -45,7 +45,9 @@ export class ElevenLabsTranscriptionSession {
   }
 
   private receive(raw: string): void {
-    if (this.closed) return
+    if (this.closed) {
+      return
+    }
     let data: unknown
     try {
       data = JSON.parse(raw)
@@ -53,21 +55,31 @@ export class ElevenLabsTranscriptionSession {
       this.fail('elevenlabs_invalid_response')
       return
     }
-    if (!data || typeof data !== 'object' || !('message_type' in data)) return
+    if (!data || typeof data !== 'object' || !('message_type' in data)) {
+      return
+    }
     const kind = data.message_type
     if (kind === 'session_started' && !this.ready) {
       this.ready = true
-      if (this.startTimer) clearTimeout(this.startTimer)
+      if (this.startTimer) {
+        clearTimeout(this.startTimer)
+      }
       this.readyResolve?.()
       this.readyResolve = null
       this.readyReject = null
       this.resetIdleTimer()
     } else if (kind === 'partial_transcript' || kind === 'committed_transcript') {
-      if (!this.ready || !('text' in data) || typeof data.text !== 'string') return
-      if (data.text.trim()) this.resetIdleTimer()
+      if (!this.ready || !('text' in data) || typeof data.text !== 'string') {
+        return
+      }
+      if (data.text.trim()) {
+        this.resetIdleTimer()
+      }
       if (kind === 'committed_transcript') {
         this.dirty = false
-        if (data.text.trim()) this.sink({ type: 'final', text: data.text.trim() + ' ' })
+        if (data.text.trim()) {
+          this.sink({ type: 'final', text: `${data.text.trim()} ` })
+        }
         this.finishResolve?.()
       } else {
         this.sink({ type: 'partial', text: data.text })
@@ -84,12 +96,16 @@ export class ElevenLabsTranscriptionSession {
   }
 
   private resetIdleTimer(): void {
-    if (this.idleTimer) clearTimeout(this.idleTimer)
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer)
+    }
     this.idleTimer = setTimeout(() => this.fail('elevenlabs_speech_idle_timeout'), 60_000)
   }
 
   feedAudio(samples: Float32Array, sampleRate: number): void {
-    if (this.closed || this.finishing || !this.ready) return
+    if (this.closed || this.finishing || !this.ready) {
+      return
+    }
     if (
       !Number.isFinite(sampleRate) ||
       sampleRate < 8000 ||
@@ -105,12 +121,12 @@ export class ElevenLabsTranscriptionSession {
       this.fail('elevenlabs_session_time_limit')
       return
     }
-    if (!normalized.length) return
+    if (!normalized.length) {
+      return
+    }
     const pcm = Buffer.alloc(normalized.length * 2)
     for (let i = 0; i < normalized.length; i++) {
-      const value = Number.isFinite(normalized[i])
-        ? Math.max(-1, Math.min(1, normalized[i]))
-        : 0
+      const value = Number.isFinite(normalized[i]) ? Math.max(-1, Math.min(1, normalized[i])) : 0
       pcm.writeInt16LE(Math.round(value * (value < 0 ? 32768 : 32767)), i * 2)
     }
     this.dirty = true
@@ -130,13 +146,17 @@ export class ElevenLabsTranscriptionSession {
         commit
       }),
       (error) => {
-        if (error) this.fail('elevenlabs_connection_failed')
+        if (error) {
+          this.fail('elevenlabs_connection_failed')
+        }
       }
     )
   }
 
   async finish(): Promise<string> {
-    if (this.closed) return ''
+    if (this.closed) {
+      return ''
+    }
     this.finishing = true
     if (!this.ready || !this.dirty) {
       this.dispose()
@@ -158,20 +178,30 @@ export class ElevenLabsTranscriptionSession {
   }
 
   private fail(code: string): void {
-    if (this.closed) return
+    if (this.closed) {
+      return
+    }
     const error = new Error(code)
     const notify = this.ready && !this.finishing
     this.readyReject?.(error)
     this.finishReject?.(error)
     this.dispose()
-    if (notify) this.sink({ type: 'error', error: code })
+    if (notify) {
+      this.sink({ type: 'error', error: code })
+    }
   }
 
   private dispose(): void {
-    if (this.closed) return
+    if (this.closed) {
+      return
+    }
     this.closed = true
-    if (this.startTimer) clearTimeout(this.startTimer)
-    if (this.idleTimer) clearTimeout(this.idleTimer)
+    if (this.startTimer) {
+      clearTimeout(this.startTimer)
+    }
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer)
+    }
     this.readyReject?.(new Error('dictation_canceled'))
     this.readyReject = null
     this.readyResolve = null

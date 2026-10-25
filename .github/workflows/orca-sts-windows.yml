@@ -3,15 +3,14 @@ name: Orca-STS Windows validation
 on:
   push:
     branches: [feat/elevenlabs-voice]
-  pull_request:
-    branches: [main]
+  workflow_call:
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: orca-sts-windows-${{ github.event.pull_request.number || github.ref }}
+  group: orca-sts-windows-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -59,6 +58,9 @@ jobs:
           src/shared/sts-voice-playback.test.ts
           src/main/speech/elevenlabs-speech-client.test.ts
           src/main/speech/elevenlabs-transcription-session.test.ts
+          src/main/startup/dev-instance-identity.test.ts
+          src/main/updater.build-channel-selection.test.ts
+          config/scripts/electron-builder-sts.test.mjs
           --maxWorkers=2
 
       - name: Typecheck the application
@@ -67,20 +69,24 @@ jobs:
       - name: Build Windows application
         run: pnpm build:release
 
-      - name: Package validation build
+      - name: Package Orca-STS Windows installer
         run: |
           pnpm ensure:electron-runtime
-          pnpm exec electron-builder --config config/electron-builder.config.cjs --win --x64 --dir --publish never
+          pnpm exec electron-builder --config config/electron-builder-sts.config.cjs --win --x64 --publish never
 
       - name: Record the source revision
         run: |
-          git rev-parse HEAD > dist/win-unpacked/ORCA-STS-SOURCE.txt
-          printf '%s\n' 'Validation build only. Fork installer identity and update isolation are not yet configured.' > dist/win-unpacked/ORCA-STS-VALIDATION.txt
+          git rev-parse HEAD > dist/ORCA-STS-SOURCE.txt
+          cd dist
+          sha256sum Orca-STS-*.exe > SHA256SUMS.txt
 
       - uses: actions/upload-artifact@v7
         with:
-          name: orca-sts-windows-validation-${{ github.sha }}
-          path: dist/win-unpacked/
+          name: orca-sts-windows-${{ github.sha }}
+          path: |
+            dist/Orca-STS-*.exe
+            dist/SHA256SUMS.txt
+            dist/ORCA-STS-SOURCE.txt
           if-no-files-found: error
           retention-days: 3
           compression-level: 1

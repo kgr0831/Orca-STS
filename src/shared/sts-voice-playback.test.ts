@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { NativeChatMessage } from './native-chat-types'
-import { localKoreanVoice, spokenProse, StsVoicePlayback, voiceMessageText } from './sts-voice-playback'
+import {
+  localKoreanVoice,
+  spokenProse,
+  StsVoicePlayback,
+  voiceMessageText
+} from './sts-voice-playback'
 
 function message(id: string, text: string, sequence = 1): NativeChatMessage {
   return {

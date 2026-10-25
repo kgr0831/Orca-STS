@@ -59,38 +59,50 @@ export function ElevenLabsVoiceSettings({
   }, [configured, onUpdate, refreshModelStates])
 
   useEffect(() => {
-    if (configureRequest > 0) keyInput.current?.focus()
+    if (configureRequest > 0) {
+      keyInput.current?.focus()
+    }
   }, [configureRequest])
 
   useEffect(() => {
     cancelPreview.current?.()
     cancelPreview.current = null
+    // oxlint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- Reflect the canceled audio request when its voice or provider changes.
     setPreviewing(false)
   }, [voiceId, modelId, configured, settings.ttsProvider])
 
   async function save(clear = false): Promise<void> {
-    if (pending || loading) return
+    if (pending || loading) {
+      return
+    }
     setPending(true)
     setError('')
     cancelPreview.current?.()
     setPreviewing(false)
     try {
-      if (clear) await window.api.speech.clearElevenLabsApiKey()
-      else await window.api.speech.saveElevenLabsApiKey(draft)
-      if (!mounted.current) return
+      await (clear
+        ? window.api.speech.clearElevenLabsApiKey()
+        : window.api.speech.saveElevenLabsApiKey(draft))
+      if (!mounted.current) {
+        return
+      }
       setDraft('')
       setVoices([])
       onUpdate({ elevenLabsApiKeyConfigured: !clear })
       refreshModelStates()
     } catch {
       if (mounted.current) {
-        setError(translate(
-          'elevenLabsVoice.keyError',
-          'Could not update the key. Stop dictation and check that encrypted storage is available.'
-        ))
+        setError(
+          translate(
+            'elevenLabsVoice.keyError',
+            'Could not update the key. Stop dictation and check that encrypted storage is available.'
+          )
+        )
       }
     } finally {
-      if (mounted.current) setPending(false)
+      if (mounted.current) {
+        setPending(false)
+      }
     }
   }
 
@@ -99,16 +111,22 @@ export function ElevenLabsVoiceSettings({
     setError('')
     try {
       const result = await window.api.speech.listElevenLabsVoices()
-      if (mounted.current) setVoices(result)
+      if (mounted.current) {
+        setVoices(result)
+      }
     } catch {
       if (mounted.current) {
-        setError(translate(
-          'elevenLabsVoice.listError',
-          'Could not load voices. Check your key, Voices read permission, and connection.'
-        ))
+        setError(
+          translate(
+            'elevenLabsVoice.listError',
+            'Could not load voices. Check your key, Voices read permission, and connection.'
+          )
+        )
       }
     } finally {
-      if (mounted.current) setLoading(false)
+      if (mounted.current) {
+        setLoading(false)
+      }
     }
   }
 
@@ -131,15 +149,19 @@ export function ElevenLabsVoiceSettings({
         modelId
       },
       () => {
-        if (mounted.current) setPreviewing(false)
+        if (mounted.current) {
+          setPreviewing(false)
+        }
       },
       () => {
         if (mounted.current) {
           setPreviewing(false)
-          setError(translate(
-            'elevenLabsVoice.previewError',
-            'Preview failed. Check the voice ID, TTS permission, quota, and connection.'
-          ))
+          setError(
+            translate(
+              'elevenLabsVoice.previewError',
+              'Preview failed. Check the voice ID, TTS permission, quota, and connection.'
+            )
+          )
         }
       }
     )
@@ -147,7 +169,9 @@ export function ElevenLabsVoiceSettings({
 
   return (
     <section className="space-y-3 py-3" aria-labelledby={`${id}-title`}>
-      <Label id={`${id}-title`}>{translate('elevenLabsVoice.title', 'ElevenLabs voice options')}</Label>
+      <Label id={`${id}-title`}>
+        {translate('elevenLabsVoice.title', 'ElevenLabs voice options')}
+      </Label>
       <p className="text-xs text-muted-foreground">
         {translate(
           'elevenLabsVoice.cost',
@@ -155,7 +179,9 @@ export function ElevenLabsVoiceSettings({
         )}
       </p>
       <div className="space-y-2">
-        <Label htmlFor={`${id}-key`}>{translate('elevenLabsVoice.key', 'ElevenLabs API key')}</Label>
+        <Label htmlFor={`${id}-key`}>
+          {translate('elevenLabsVoice.key', 'ElevenLabs API key')}
+        </Label>
         <div className="flex flex-wrap gap-2">
           <Input
             id={`${id}-key`}
@@ -166,15 +192,23 @@ export function ElevenLabsVoiceSettings({
             className="min-w-48 flex-1"
             value={draft}
             disabled={pending}
-            placeholder={configured
-              ? translate('elevenLabsVoice.configured', 'Key saved')
-              : translate('elevenLabsVoice.enterKey', 'Enter your API key')}
+            placeholder={
+              configured
+                ? translate('elevenLabsVoice.configured', 'Key saved')
+                : translate('elevenLabsVoice.enterKey', 'Enter your API key')
+            }
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === 'Enter' && draft.trim()) void save()
+              if (event.key === 'Enter' && draft.trim()) {
+                void save()
+              }
             }}
           />
-          <Button size="sm" disabled={pending || loading || !draft.trim()} onClick={() => void save()}>
+          <Button
+            size="sm"
+            disabled={pending || loading || !draft.trim()}
+            onClick={() => void save()}
+          >
             {translate('elevenLabsVoice.save', 'Save key')}
           </Button>
           <Button
@@ -206,7 +240,9 @@ export function ElevenLabsVoiceSettings({
         <Select
           value={settings.ttsProvider ?? 'local'}
           onValueChange={(value) => {
-            if (value === 'local' || value === 'elevenlabs') onUpdate({ ttsProvider: value })
+            if (value === 'local' || value === 'elevenlabs') {
+              onUpdate({ ttsProvider: value })
+            }
           }}
         >
           <SelectTrigger id={`${id}-provider`} className="w-64">
@@ -240,12 +276,17 @@ export function ElevenLabsVoiceSettings({
                 value={voices.some((voice) => voice.id === voiceId) ? voiceId : ''}
                 onValueChange={(value) => onUpdate({ elevenLabsVoiceId: value })}
               >
-                <SelectTrigger className="w-64" aria-label={translate('elevenLabsVoice.voice', 'Voice')}>
+                <SelectTrigger
+                  className="w-64"
+                  aria-label={translate('elevenLabsVoice.voice', 'Voice')}
+                >
                   <SelectValue placeholder={translate('elevenLabsVoice.voice', 'Voice')} />
                 </SelectTrigger>
                 <SelectContent>
                   {voices.map((voice) => (
-                    <SelectItem key={voice.id} value={voice.id}>{voice.name}</SelectItem>
+                    <SelectItem key={voice.id} value={voice.id}>
+                      {voice.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -253,7 +294,10 @@ export function ElevenLabsVoiceSettings({
           </div>
           <div className="space-y-2">
             <Label htmlFor={`${id}-voice`}>
-              {translate('elevenLabsVoice.voiceId', 'Voice ID (or choose from your first 100 voices)')}
+              {translate(
+                'elevenLabsVoice.voiceId',
+                'Voice ID (or choose from your first 100 voices)'
+              )}
             </Label>
             <Input
               id={`${id}-voice`}
@@ -271,12 +315,19 @@ export function ElevenLabsVoiceSettings({
                 }
               }}
             >
-              <SelectTrigger className="w-64" aria-label={translate('elevenLabsVoice.model', 'TTS model')}>
+              <SelectTrigger
+                className="w-64"
+                aria-label={translate('elevenLabsVoice.model', 'TTS model')}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="eleven_flash_v2_5">Flash v2.5</SelectItem>
-                <SelectItem value="eleven_multilingual_v2">Multilingual v2</SelectItem>
+                <SelectItem value="eleven_flash_v2_5">
+                  {translate('elevenLabsVoice.flash', 'Flash v2.5')}
+                </SelectItem>
+                <SelectItem value="eleven_multilingual_v2">
+                  {translate('elevenLabsVoice.multilingual', 'Multilingual v2')}
+                </SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -299,7 +350,9 @@ export function ElevenLabsVoiceSettings({
         </div>
       )}
       {error && (
-        <p role="alert" className="text-sm text-destructive">{error}</p>
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
       )}
     </section>
   )

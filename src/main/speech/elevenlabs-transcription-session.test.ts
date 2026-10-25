@@ -2,13 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SttEvent } from './stt-service'
 import { ElevenLabsTranscriptionSession } from './elevenlabs-transcription-session'
 
-const sockets = vi.hoisted((): {
-  items: {
-    sent: { commit?: boolean; audio_base_64?: string }[]
-    terminated: boolean
-    receive: (value: unknown) => void
-  }[]
-} => ({ items: [] }))
+const sockets = vi.hoisted(
+  (): {
+    items: {
+      sent: { commit?: boolean; audio_base_64?: string }[]
+      terminated: boolean
+      receive: (value: unknown) => void
+    }[]
+  } => ({ items: [] })
+)
 
 vi.mock('ws', async () => {
   const { EventEmitter } = await import('node:events')

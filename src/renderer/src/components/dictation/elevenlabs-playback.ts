@@ -1,11 +1,12 @@
 import type { ElevenLabsSpeechRequest } from '../../../../shared/speech-types'
+import { createBrowserUuid } from '@/lib/browser-uuid'
 
 export function playElevenLabsSpeech(
   request: Omit<ElevenLabsSpeechRequest, 'requestId'>,
   onEnd: () => void,
   onError: () => void
 ): () => void {
-  const requestId = crypto.randomUUID()
+  const requestId = createBrowserUuid()
   let canceled = false
   let audio: HTMLAudioElement | null = null
   let url: string | null = null
@@ -18,7 +19,9 @@ export function playElevenLabsSpeech(
       audio.load()
       audio = null
     }
-    if (url) URL.revokeObjectURL(url)
+    if (url) {
+      URL.revokeObjectURL(url)
+    }
     url = null
   }
   const fail = () => {
@@ -31,7 +34,9 @@ export function playElevenLabsSpeech(
   void window.api.speech
     .synthesizeElevenLabs({ ...request, requestId })
     .then(async (bytes) => {
-      if (canceled) return
+      if (canceled) {
+        return
+      }
       const blob = new Blob([new Uint8Array(bytes)], { type: 'audio/mpeg' })
       url = URL.createObjectURL(blob)
       audio = new Audio(url)
