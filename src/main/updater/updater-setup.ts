@@ -21,6 +21,7 @@ import { AUTO_UPDATE_CHECK_INTERVAL_MS } from './updater-state'
 import { UpdaterDownloadInstall } from './updater-download-install'
 import { configureMacShipItScheduling } from './macos-shipit-scheduling'
 import type { PreQuitCleanupFailureMode, UpdateInstallMode } from './updater-state'
+import { isStsDistributionVersion, STS_RELEASES_URL } from '../../shared/sts-distribution'
 
 export type UpdaterSetupOptions = {
   getLastUpdateCheckAt?: () => number | null
@@ -37,19 +38,42 @@ export type UpdaterSetupOptions = {
 
 /** Initializes electron-updater and attaches lifecycle/event bridges. */
 export class UpdaterSetup extends UpdaterDownloadInstall {
+  private usesStsManualUpdates(): boolean {
+    return isStsDistributionVersion(app.getVersion())
+  }
+
+  private reportStsManualUpdate(): void {
+    this.sendErrorStatus(`Orca-STS updates are installed from ${STS_RELEASES_URL}`, true)
+  }
+
   checkForUpdates(): void {
+    if (this.usesStsManualUpdates()) {
+      return
+    }
     this.checkForUpdatesInBackground()
   }
 
   checkForUpdatesFromMenu(options?: UpdateCheckOptions): void {
+    if (this.usesStsManualUpdates()) {
+      this.reportStsManualUpdate()
+      return
+    }
     super.checkForUpdatesFromMenu(options)
   }
 
   downloadUpdate(): void {
+    if (this.usesStsManualUpdates()) {
+      this.reportStsManualUpdate()
+      return
+    }
     super.downloadUpdate()
   }
 
   quitAndInstall(): void {
+    if (this.usesStsManualUpdates()) {
+      this.reportStsManualUpdate()
+      return
+    }
     super.quitAndInstall()
   }
 
@@ -100,6 +124,9 @@ export class UpdaterSetup extends UpdaterDownloadInstall {
     channel: ReleaseChannel,
     options?: ReleaseBuildListOptions
   ): Promise<ReleaseBuild[]> {
+    if (this.usesStsManualUpdates()) {
+      return []
+    }
     return super.listAvailableReleaseBuilds(channel, options)
   }
 
@@ -136,7 +163,7 @@ export class UpdaterSetup extends UpdaterDownloadInstall {
       this.sendErrorStatus(`The server update did not complete: ${serveHandoffFailure}`, true)
     }
 
-    if (!app.isPackaged) {
+    if (!app.isPackaged || this.usesStsManualUpdates()) {
       return
     }
 

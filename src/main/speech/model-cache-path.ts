@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { existsSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { cp, mkdir, readdir, rename, stat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 
@@ -63,6 +63,22 @@ export function getSpeechModelCacheDirCandidates(
   // paths. Try ASCII shared caches first, but keep the requested path as a
   // last fallback so cache setup failures do not prevent the app from opening.
   return [...candidates, { modelsDir: requestedModelsDir, migrationSourceDir: null }]
+}
+
+export function prepareSpeechModelCacheDir(requestedModelsDir: string): SpeechModelCacheDir {
+  let lastError: unknown = null
+  for (const candidate of getSpeechModelCacheDirCandidates(requestedModelsDir)) {
+    try {
+      mkdirSync(candidate.modelsDir, { recursive: true })
+      return candidate
+    } catch (error) {
+      lastError = error
+      if (candidate.migrationSourceDir) {
+        console.warn('[speech] Failed to prepare ASCII speech model cache:', error)
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError))
 }
 
 async function copyMissingCacheEntry(sourcePath: string, targetPath: string): Promise<void> {

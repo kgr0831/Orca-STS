@@ -9,8 +9,13 @@ import {
   pasteTextIntoTextControl
 } from '@/lib/text-control-paste'
 import { DICTATION_FOCUS_INPUT_EVENT } from './dictation-control-events'
+import {
+  getDictationConversationTarget,
+  type DictationConversationTarget
+} from './dictation-conversation-target'
 
 export type DictationInsertionTarget =
+  | { kind: 'conversation'; target: DictationConversationTarget }
   | { kind: 'terminal'; tabId: string; paneId: number }
   | { kind: 'text'; element: HTMLInputElement | HTMLTextAreaElement }
   | { kind: 'contentEditable'; element: HTMLElement }
@@ -29,6 +34,11 @@ function readFocusedInsertionTarget(): DictationInsertionTarget | null {
 
   if (!activeElement) {
     return null
+  }
+
+  const conversation = getDictationConversationTarget(activeElement)
+  if (conversation && conversation.acceptsCapture?.() !== false) {
+    return { kind: 'conversation', target: conversation }
   }
 
   if (activeElement.classList.contains('xterm-helper-textarea')) {
@@ -54,6 +64,10 @@ function readFocusedInsertionTarget(): DictationInsertionTarget | null {
 }
 
 export function insertText(text: string, target: DictationInsertionTarget): void {
+  if (target.kind === 'conversation') {
+    target.target.onFinal(text)
+    return
+  }
   if (target.kind === 'terminal') {
     document.dispatchEvent(
       new CustomEvent('dictation:insertText', {

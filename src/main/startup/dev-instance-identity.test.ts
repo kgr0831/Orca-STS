@@ -2,6 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { getDevInstanceIdentity, shouldApplyPreReadyAppName } from './dev-instance-identity'
 
 describe('dev-instance-identity', () => {
+  it('keeps the STS installer and Windows taskbar identity separate', () => {
+    expect(getDevInstanceIdentity(false, {}, '1.4.214-sts.1')).toMatchObject({
+      name: 'Orca-STS',
+      appName: 'Orca-STS',
+      appUserModelId: 'com.kgr0831.orca.sts'
+    })
+    expect(getDevInstanceIdentity(false, {}, '1.4.214-rc.1').appName).toBe('Orca')
+  })
+
   it('keeps packaged identity stable', () => {
     expect(getDevInstanceIdentity(false, {})).toMatchObject({
       name: 'Orca',

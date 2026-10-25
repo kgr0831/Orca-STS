@@ -1,5 +1,7 @@
 import type { SecretAtRestProtection } from '../../shared/secret-at-rest-protection'
 import type {
+  ElevenLabsSpeechRequest,
+  ElevenLabsVoice,
   SpeechErrorEvent,
   SpeechLifecycleEvent,
   SpeechModelManifest,
@@ -16,6 +18,12 @@ export type SpeechApi = {
   }>
   saveOpenAiApiKey: (apiKey: string) => Promise<{ configured: boolean }>
   clearOpenAiApiKey: () => Promise<{ configured: boolean }>
+  getElevenLabsApiKeyStatus: () => Promise<{ configured: boolean }>
+  saveElevenLabsApiKey: (key: string) => Promise<{ configured: boolean }>
+  clearElevenLabsApiKey: () => Promise<{ configured: boolean }>
+  listElevenLabsVoices: () => Promise<ElevenLabsVoice[]>
+  synthesizeElevenLabs: (request: ElevenLabsSpeechRequest) => Promise<Uint8Array>
+  cancelElevenLabs: (requestId: string) => Promise<void>
   downloadModel: (modelId: string) => Promise<void>
   cancelDownload: (modelId: string) => Promise<void>
   deleteModel: (modelId: string) => Promise<void>

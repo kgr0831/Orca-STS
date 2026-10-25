@@ -1,6 +1,7 @@
 import { ModelManager } from '../speech/model-manager'
 import { openNodeSpeechDownloadRequest } from '../speech/node-speech-download-request'
 import { canReadOpenAiSpeechApiKey } from '../speech/openai-api-key-store'
+import { canReadElevenLabsSpeechApiKey } from '../speech/elevenlabs-api-key-store'
 import type { SpeechServiceFactories } from '../speech/speech-runtime-service'
 import { SttService } from '../speech/stt-service'
 
@@ -11,6 +12,11 @@ import { SttService } from '../speech/stt-service'
 export const orcadSpeechServiceFactories: SpeechServiceFactories = {
   createModelManager: (customModelsDir) =>
     // No keychain here to prompt, so readiness can prove the key decrypts.
-    new ModelManager(customModelsDir, openNodeSpeechDownloadRequest, canReadOpenAiSpeechApiKey),
+    new ModelManager(
+      customModelsDir,
+      openNodeSpeechDownloadRequest,
+      canReadOpenAiSpeechApiKey,
+      canReadElevenLabsSpeechApiKey
+    ),
   createSttService: (models) => new SttService(models)
 }

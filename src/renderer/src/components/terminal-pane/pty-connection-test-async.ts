@@ -22,21 +22,6 @@ export async function drainFakeTimerWork(limit = 20): Promise<void> {
   vi.clearAllTimers()
 }
 
-export async function drainPendingTimeouts(
-  pendingTimeouts: (() => void)[],
-  limit = 100
-): Promise<void> {
-  let iterations = 0
-  while (pendingTimeouts.length > 0) {
-    if (iterations >= limit) {
-      throw new Error('Timed out draining pending timeouts')
-    }
-    iterations += 1
-    pendingTimeouts.shift()?.()
-    await flushAsyncTicks()
-  }
-}
-
 export function writeHeadlessTerminal(term: Terminal, data: string | Uint8Array): Promise<void> {
   return new Promise((resolve) => term.write(data, resolve))
 }

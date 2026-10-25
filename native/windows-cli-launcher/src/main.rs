@@ -51,7 +51,12 @@ fn main() {
         ))
     };
 
-    let electron_path = app_directory.join("Orca.exe");
+    let sts_path = app_directory.join("Orca-STS.exe");
+    let electron_path = if sts_path.is_file() {
+        sts_path
+    } else {
+        app_directory.join("Orca.exe")
+    };
     if !electron_path.is_file() {
         fail(&format!(
             "Unable to locate Orca.exe next to \"{}\"",

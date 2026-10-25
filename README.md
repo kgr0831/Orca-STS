@@ -1,276 +1,197 @@
-<h1 align="center">
-  <a href="https://onOrca.dev"><img src="resources/build/icon.png" alt="Orca" width="64" valign="middle" /></a> Orca
-</h1>
+# Orca-STS
 
-<p align="center">
-  <a href="https://github.com/stablyai/orca"><img src="https://img.shields.io/github/stars/stablyai/orca?style=flat&amp;label=%E2%98%85&amp;color=08C" alt="GitHub stars" /></a>
-  <a href="https://github.com/stablyai/orca/releases"><img src="docs/assets/readme-downloads.svg" alt="Total downloads across all releases" /></a>
-  <img src="https://img.shields.io/badge/license-MIT-08C?style=flat" alt="License: MIT" />
-  <a href="https://discord.gg/fzjDKHxv8Q"><img src="https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white" alt="Join the Orca Discord" /></a>
-  <a href="https://x.com/orca_build"><img src="https://img.shields.io/badge/X-000000?logo=x&logoColor=white" alt="Follow Orca on X" /></a>
-  <img src="https://img.shields.io/badge/macOS%20%7C%20Windows%20%7C%20Linux-4493F8?style=flat-square" alt="Supported platforms: macOS, Windows, and Linux" />
-</p>
+**한국어로 브레인스토밍하고, 음성으로 개발 작업을 지시하는 Orca 포크.**
 
-<p align="center">
-  <sub><a href="docs/readme/README.zh-CN.md">中文</a> · <a href="docs/readme/README.ja.md">日本語</a> · <a href="docs/readme/README.ko.md">한국어</a> · <a href="docs/readme/README.es.md">Español</a> · <a href="docs/readme/README.fr.md">Français</a> · <a href="docs/readme/README.pt.md">Português</a></sub>
-</p>
+[Orca](https://github.com/stablyai/orca)를 기반으로 음성 인식(STT), 기존 Codex 로그인 세션(LLM), 음성 합성(TTS)을 연결합니다. 기본은 추가 API 요금 없는 로컬 음성이며, 선택적으로 ElevenLabs 키를 등록해 STT와 TTS를 각각 사용할 수 있습니다.
 
-<p align="center">
-  <strong>The AI Orchestrator for 100x builders.</strong><br/>
-  Run Codex, ClaudeCode, OpenCode or Pi side-by-side — each in its own worktree, tracked in one place.
-</p>
+> **개발 상태: Windows 설치 파일 빌드 완료, 음성 실사용 검증 필요.** 작업 모드, 한국어 음성 대화 패널, 실시간 인식 자막, 로컬 TTS와 ElevenLabs 옵션을 포함합니다. Windows x64 앱 빌드와 네이티브 패키징 검사를 통과했습니다. 실제 마이크·스피커·Codex 대화 및 ElevenLabs 계정 연결은 사용 환경에서 확인해야 합니다.
 
-<h3 align="center"><a href="https://onorca.dev/download"><ins>Download Orca</ins></a></h3>
+## 만들고 싶은 경험
 
-<p align="center">
-  <img src="docs/assets/readme-hero.jpg" alt="Orca desktop app running agents in parallel worktrees, with the Orca mobile companion app in the corner" width="960" />
-</p>
+- 말하는 동안 인식 중인 한국어 자막을 보여주고, 발화가 끝나면 내용을 확정합니다.
+- AI의 응답은 텍스트로 표시하면서 문장 단위로 읽어줍니다.
+- 상황에 맞는 모드로 대화하고, 아이디어를 선택한 프로젝트의 작업으로 이어갑니다.
+- 듣기·생각 중·답변 읽기·작업 중 상태와 중지 버튼을 제공합니다.
+- 작업 실행은 기존 Codex 세션의 권한과 승인 절차를 따릅니다.
 
-## Features
+## 작업 모드
 
-<table>
-<tr>
-<td width="50%" valign="middle">
+| 모드          | 용도                                          | 기본 동작                                     |
+| ------------- | --------------------------------------------- | --------------------------------------------- |
+| 브레인스토밍  | 아이디어 발산, 대안 비교, 가설 검토           | 질문과 제안 중심으로 대화하고 결정 사항 정리  |
+| 요구사항 정리 | 목표, 사용자, 범위, 제약, 완료 기준 정의      | 모호한 요구를 질문으로 구체화                 |
+| 설계          | 구조, 인터페이스, 데이터 흐름, 구현 계획 검토 | 대안과 장단점을 비교하고 설계안 제시          |
+| 개발 지시     | 기능 구현, 수정, 리팩터링                     | 요청 범위에서 파일 수정과 관련 검증 수행      |
+| 디버깅        | 오류 재현, 원인 조사, 수정 및 재검증          | 증거를 바탕으로 원인을 좁히고 해결            |
+| 코드 리뷰     | 정확성, 회귀, 보안, 검증 공백 점검            | 발견 사항을 근거와 중요도 순서로 보고         |
+| 문서화        | README, 사양, 작업 기록, 인수인계 작성        | 합의한 내용을 문서로 정리                     |
+| 일반 작업     | 조사, 비교, 체크리스트, 일상 업무 지원        | 목표를 확인하고 필요한 작업을 단계적으로 수행 |
 
-### Mobile Companion
+대화·검토 모드에서는 아이디어를 실행 요청으로 오해하지 않도록 합니다. 파일 수정 등 실행이 필요한 상황은 사용자의 요청과 현재 세션 권한을 따릅니다. 모드를 바꿔도 세션의 승인·샌드박스 제한이 완화되지는 않습니다.
 
-Monitor and steer your agents from your phone — get notified when an agent finishes and send follow-ups from anywhere.
+개발 빌드의 **Codex Chat UI → 입력창 위 작업 모드**에서 선택합니다. `기본`은 기존 세션 동작을 유지하며, 모드를 선택하면 이후 직접 보내는 메시지에 해당 모드의 지침을 함께 전달합니다. 이미 전송했거나 대기 중인 메시지는 바뀌지 않고, 모드 선택 자체로 모델을 호출하지 않습니다. 선택은 현재 열린 대화 화면에서 유지됩니다.
 
-[iOS App Store](https://apps.apple.com/us/app/orca-ide/id6766130217) · [Android APK](https://www.onorca.dev/download/android) · [Docs →](https://www.onorca.dev/docs/mobile)
+모드는 대화 지침이며 권한을 강제로 제한하는 별도 샌드박스가 아닙니다. 승인 카드 응답과 에이전트 명령은 기존 경로로 처리합니다. 현재 모드 UI는 데스크톱 Codex 구조화 채팅에 연결되어 있으며, 터미널 채팅과 모바일에는 아직 추가하지 않았습니다.
 
-</td>
-<td width="50%">
-  <a href="https://www.onorca.dev/docs/mobile"><picture><source srcset="docs/assets/feature-wall/mobile-companion-app-showcase.gif" type="image/gif"><img src="docs/assets/feature-wall/mobile-companion-app-showcase.jpg" alt="Orca desktop with the mobile companion app" width="100%" /></picture></a>
-</td>
-</tr>
-<tr>
-<td width="50%" valign="middle">
+### 어려운 작업 위임 (MAS)
 
-### Parallel Worktrees
+작업 모드를 선택하면 **어려운 작업 위임 (MAS)**이 기본으로 켜집니다. 조사·검색, 복잡한 설계, 구체적인 구현·디버깅, 원인 분석, 검증, 다단계 계획과 깊은 판단이 필요한 일을 Codex 하위 에이전트에 맡기도록 요청합니다. 간단한 대화는 주 에이전트가 처리하고, 하위 에이전트의 결과를 확인해 답변으로 종합합니다. 브레인스토밍에서는 읽기·검색·분석까지만 수행하며, 파일 수정은 개발 지시 등 해당 작업을 허용하는 모드에서 수행합니다.
 
-Fan one prompt across five agents, each in its own isolated git worktree — compare the results and merge the winner.
+**전문 작업 모델**에서 Codex가 보고한 모델을 선택할 수 있습니다. 자동은 목록에 `gpt-6.1-sol`이 있으면 우선 요청하고, 없으면 Codex가 도구에서 제공하는 추론 모델을 선택하도록 요청합니다. 주 대화 모델은 바꾸지 않습니다. 추론 수준은 `high`를 요청하고, 특히 어려운 작업은 모델이 지원하는 더 높은 수준을 사용하도록 합니다. 모델 목록은 계정의 실제 이용 권한을 보장하지 않습니다.
 
-[Docs →](https://www.onorca.dev/docs/model/worktrees)
+이 기능은 [Codex 공식 하위 에이전트 지침](https://learn.chatgpt.com/docs/agent-configuration/subagents)에 따른 **메시지 기반 위임 정책**입니다. 실제 실행 여부와 모델 선택은 설치된 Codex 버전·도구·계정·프로젝트 지침에 따르며, 별도 오케스트레이터가 강제로 모델을 전환하지 않습니다. 위임이 실제로 실행되면 기존 채팅의 하위 에이전트 활동에서 확인합니다. 도구나 모델을 쓸 수 없는 경우 이를 알리도록 지시하며, 위임 성공으로 표시하거나 유료 API로 자동 전환하지 않습니다.
 
-</td>
-<td width="50%">
-  <a href="https://www.onorca.dev/docs/model/worktrees"><picture><source srcset="docs/site/public/docs/tab-split.gif" type="image/gif"><img src="docs/site/public/docs/posters/tab-split.jpg" alt="Parallel worktree orchestration" width="100%" /></picture></a>
-</td>
-</tr>
-<tr>
-<td width="50%" valign="middle">
+사용량을 줄이도록 동시 하위 에이전트 최대 2개, 재위임 금지, 중복 조사 방지를 요청합니다. 이는 요청 지침이며 호스트의 동시 실행 제한을 변경하지 않습니다. 추가 API 키 없이 기존 Codex 세션을 사용하지만 **구독 사용량은 더 소모**합니다. 옵션 변경만으로 작업이 시작되지 않으며 이후 보내는 텍스트·음성 메시지에 적용됩니다. `기본` 모드와 슬래시 명령에는 적용하지 않습니다. 선택은 현재 열린 대화 화면에서 유지됩니다.
 
-### Terminal Splits
+## 음성 대화 사용 흐름
 
-Ghostty-class terminals with WebGL rendering, infinite splits, and scrollback that survives restarts.
+개발 빌드의 Codex Chat UI에서 **작업 모드**를 고르고 **음성 대화**를 엽니다.
 
-[Docs →](https://www.onorca.dev/docs/terminal)
+1. **음성 설정**에서 음성 입력을 켜고 **Zipformer Streaming KO** 모델을 다운로드·선택합니다. ElevenLabs 키를 등록했다면 **ElevenLabs Scribe v2 Realtime**도 선택할 수 있습니다.
+2. 운영체제에 로컬 한국어 읽기 음성을 설치합니다. 앱에서 음성을 찾지 못하면 자막 대화를 계속 사용할 수 있으며, 유료·원격 TTS로 자동 전환하지 않습니다.
+3. **말하기 시작**을 누릅니다. 인식 중인 자막과 확정된 문장을 나누어 보여줍니다.
+4. **말이 끝나면 보내고 답변 후 다시 듣기**를 켜면 STT가 발화 종료를 감지한 후 녹음을 마무리하고, 현재 모드로 Codex에 보냅니다. 끄면 내용을 수정한 뒤 **텍스트 보내기**를 누릅니다.
+5. AI의 답변을 채팅에서 확인하고, 음성 패널에서는 읽고 있는 문장을 자막으로 봅니다. 코드 블록·도구 출력·추론·하위 에이전트 메시지는 읽지 않습니다.
+6. **음성 대화 일시정지**는 녹음·답변 읽기·자동 재시작을 멈춥니다. 실행 중인 개발 작업은 **Codex 작업 중단**으로 중단합니다.
 
-</td>
-<td width="50%">
-  <a href="https://www.onorca.dev/docs/terminal"><picture><source srcset="resources/onboarding/feature-wall/tile-02.webp" type="image/webp"><img src="resources/onboarding/feature-wall/tile-02.poster.jpg" alt="Terminal splits" width="100%" /></picture></a>
-</td>
-</tr>
-<tr>
-<td width="50%" valign="middle">
+답변 읽기와 녹음을 번갈아 실행해 스피커 소리의 재입력을 줄입니다. 읽기가 끝나고 Codex가 대기 상태가 되면 자동으로 다음 발화를 듣습니다. 탭·창을 떠나거나 승인 카드가 열리면 자동 흐름을 멈춥니다. 동시에 말하면서 AI 답변에 끼어드는 기능은 아직 없습니다.
 
-### Design Mode
+전송 실패·전송 여부 불명 상태에서는 텍스트를 남기고 자동으로 재전송하지 않습니다. 음성 패널을 닫으면 보내지 않은 패널 초안은 사라지므로 필요한 내용은 먼저 복사하세요. 모드와 자동 대화 옵션은 현재 열린 화면에서 유지되고, 음성 설정의 제공자·목소리 선택은 저장됩니다.
 
-Click any UI element in a real Chromium window to send its HTML, CSS, and a cropped screenshot straight into your agent's prompt.
+## ElevenLabs STT / TTS 옵션
 
-[Docs →](https://www.onorca.dev/docs/browser/design-mode)
+**설정 → 음성 → ElevenLabs 음성 옵션**에서 키를 입력합니다. 키 등록만으로 로컬 설정이 바뀌거나 음성 요청이 시작되지는 않습니다.
 
-</td>
-<td width="50%">
-  <a href="https://www.onorca.dev/docs/browser/design-mode"><picture><source srcset="docs/site/public/docs/orca-design-mode.gif" type="image/gif"><img src="resources/onboarding/feature-wall/tile-05.poster.jpg" alt="Embedded browser and Design Mode" width="100%" /></picture></a>
-</td>
-</tr>
-<tr>
-<td width="50%" valign="middle">
+1. 필요한 API 권한인 Speech to Text, Text to Speech, Voices 읽기를 ElevenLabs 계정에서 허용하고 **키 저장**을 누릅니다.
+2. **STT**: 위의 음성 모델에서 Scribe v2 Realtime을 선택하면 실시간 부분 자막과 확정 문장을 받습니다. 로컬 한국어 STT를 그대로 사용해도 됩니다.
+3. **TTS**: 답변 음성에서 ElevenLabs를 선택하고 **내 목소리 불러오기**에서 목소리를 고릅니다. 목록에 없는 목소리는 계정의 Voice ID를 직접 입력합니다.
+4. **미리듣기 · 크레딧 사용**으로 확인합니다. 차분한 전달을 위해 안정성 0.7, 속도 0.95를 사용합니다. 목소리 자체의 특성에 따라 결과가 달라지므로 한국어 목소리를 직접 들어보고 선택하세요.
+5. TTS는 기본 Flash v2.5 또는 Multilingual v2를 선택할 수 있습니다. 실제 비용과 사용 가능 여부는 계정 요금제·잔여 크레딧·해당 목소리에 따릅니다.
 
-### GitHub &amp; Linear, Native
+| STT        | TTS        | 추가 음성 API 사용           |
+| ---------- | ---------- | ---------------------------- |
+| 로컬       | 로컬       | 없음                         |
+| 로컬       | ElevenLabs | 답변 읽기·미리듣기           |
+| ElevenLabs | 로컬       | 음성 인식                    |
+| ElevenLabs | ElevenLabs | 음성 인식·답변 읽기·미리듣기 |
 
-Browse PRs, issues, and project boards in-app — open a worktree from any task and review without a context switch.
+키는 현재 컴퓨터의 Orca 비밀정보 저장소로 암호화해 `~/.orca/elevenlabs-speech-token.enc`에 보관합니다. 암호화가 불가능하면 저장을 거절하며, 키 원문을 일반 설정·대화·저장소에 보관하거나 다시 표시하지 않습니다. 키 변경·삭제 전에는 받아쓰기를 중지하세요. 이 설정은 데스크톱용이며 모바일에 키를 전달하거나 다른 호스트에 동기화하지 않습니다. 원격 프로젝트를 사용하는 경우에도 음성 처리는 데스크톱에서 실행됩니다.
 
-[Docs →](https://www.onorca.dev/docs/review/linear)
+ElevenLabs STT를 사용하면 마이크 음성이, TTS를 사용하면 읽을 답변 텍스트가 ElevenLabs로 전송됩니다. 회사의 데이터 보관 정책과 계정의 사용 요금이 적용되며, Codex 구독에는 포함되지 않습니다. API 오류 시 자동 재시도나 다른 유료 서비스 전환은 하지 않습니다. STT는 60초 동안 인식된 발화가 없거나 한 번의 녹음이 10분을 넘으면 중지합니다. TTS는 짧은 문장 단위로 생성한 음원을 재생하며, 일시정지 시 진행 중 요청과 재생을 취소합니다. 이미 처리된 사용량은 취소해도 청구될 수 있습니다.
 
-</td>
-<td width="50%">
-  <a href="https://www.onorca.dev/docs/review/linear"><picture><source srcset="resources/onboarding/feature-wall/tile-03.webp" type="image/webp"><img src="resources/onboarding/feature-wall/tile-03.poster.jpg" alt="GitHub and Linear task workflows in Orca" width="100%" /></picture></a>
-</td>
-</tr>
-<tr>
-<td width="50%" valign="middle">
+Windows 앱 빌드와 모의 API 응답을 사용하는 연결·중단·오류 처리 테스트를 통과했습니다. 실제 API 키를 사용한 연결·마이크·재생 검증은 아직 수행하지 않았습니다. API 계약은 [실시간 STT](https://elevenlabs.io/docs/api-reference/speech-to-text/v-1-speech-to-text-realtime), [TTS](https://elevenlabs.io/docs/api-reference/text-to-speech/stream), [모델 문서](https://elevenlabs.io/docs/overview/models)를 기준으로 구현했습니다.
 
-### SSH Worktrees
+## 음성 처리 구조
 
-Run agents on a beefy remote box with full file editing, git, and terminals — auto-reconnect and port forwarding included.
-
-[Docs →](https://www.onorca.dev/docs/ssh)
-
-</td>
-<td width="50%">
-  <a href="https://www.onorca.dev/docs/ssh"><picture><source srcset="resources/onboarding/feature-wall/tile-06.webp" type="image/webp"><img src="resources/onboarding/feature-wall/tile-06.poster.jpg" alt="Remote worktrees over SSH" width="100%" /></picture></a>
-</td>
-</tr>
-<tr>
-<td width="50%" valign="middle">
-
-### Annotate AI Diffs
-
-Drop comments on any diff line and ship them back to the agent — review, edit, and commit without leaving Orca.
-
-[Docs →](https://www.onorca.dev/docs/review/annotate-ai-diff)
-
-</td>
-<td width="50%">
-  <a href="https://www.onorca.dev/docs/review/annotate-ai-diff"><picture><source srcset="docs/site/public/docs/annotate-ai-diff.gif" type="image/gif"><img src="resources/onboarding/feature-wall/tile-08.poster.jpg" alt="Annotate AI-generated diffs" width="100%" /></picture></a>
-</td>
-</tr>
-<tr>
-<td width="50%" valign="middle">
-
-### Drag Files to Agents
-
-VS Code's editor with autosave everywhere — drag files or images straight into an agent prompt.
-
-[Docs →](https://www.onorca.dev/docs/editing/file-explorer)
-
-</td>
-<td width="50%">
-  <a href="https://www.onorca.dev/docs/editing/file-explorer"><picture><source srcset="resources/onboarding/feature-wall/tile-07.gif" type="image/gif"><img src="resources/onboarding/feature-wall/tile-07.poster.jpg" alt="Drag files and images into an agent prompt" width="100%" /></picture></a>
-</td>
-</tr>
-<tr>
-<td width="50%" valign="middle">
-
-### Orca CLI
-
-Agents drive Orca too — script every workflow with `orca worktree create`, `snapshot`, `click`, and `fill`.
-
-[Docs →](https://www.onorca.dev/docs/cli/overview)
-
-</td>
-<td width="50%">
-  <a href="https://www.onorca.dev/docs/cli/overview"><picture><source srcset="resources/onboarding/feature-wall/tile-09.webp" type="image/webp"><img src="resources/onboarding/feature-wall/tile-09.poster.jpg" alt="Script Orca from the CLI" width="100%" /></picture></a>
-</td>
-</tr>
-</table>
-
-**Also in the box:**
-
-- **[Quick open](https://www.onorca.dev/docs/model/quick-open)** — Search across worktrees, files, agents, commands, and repo context without leaving your flow.
-- **[Account switcher &amp; usage tracking](https://www.onorca.dev/docs/agents/usage-tracking)** — See Claude and Codex usage and rate-limit resets, and hot-swap accounts without re-logging in.
-- **[Rich repo previews](https://www.onorca.dev/docs/editing/markdown)** — Preview Markdown, images, PDFs, and repo docs in the workspace.
-- **[Computer Use](https://www.onorca.dev/docs/cli/computer-use)** — Let agents operate desktop apps and visible UI when a workflow needs real interaction.
-- **[Notifications and unread state](https://www.onorca.dev/docs/notifications)** — Know when an agent finishes or needs attention, then mark threads unread to come back later.
-- **And many, many more** — we ship daily, so this list is perpetually behind. The [changelog](https://github.com/stablyai/orca/releases) is the real feature list.
-
----
-
-## Supported Agents
-
-Works with **any CLI agent** — if it runs in a terminal, it runs in Orca.
-
-<p>
-  <a href="https://docs.anthropic.com/claude/docs/claude-code"><kbd><img src="docs/assets/claude-logo.svg" alt="Claude Code logo" width="16" valign="middle" /> Claude Code</kbd></a> &nbsp;
-  <a href="https://github.com/openai/codex"><kbd><img src="https://www.google.com/s2/favicons?domain=openai.com&sz=64" alt="Codex logo" width="16" valign="middle" /> Codex</kbd></a> &nbsp;
-  <a href="https://x.ai/cli"><kbd><img src="https://www.google.com/s2/favicons?domain=x.ai&sz=64" alt="Grok logo" width="16" valign="middle" /> Grok</kbd></a> &nbsp;
-  <a href="https://cursor.com/cli"><kbd><img src="https://www.google.com/s2/favicons?domain=cursor.com&sz=64" alt="Cursor logo" width="16" valign="middle" /> Cursor</kbd></a> &nbsp;
-  <a href="https://docs.github.com/en/copilot/how-tos/set-up/install-copilot-cli"><kbd><img src="https://www.google.com/s2/favicons?domain=github.com&sz=64" alt="GitHub Copilot logo" width="16" valign="middle" /> GitHub Copilot</kbd></a> &nbsp;
-  <a href="https://dev.meta.ai/docs/muse-code"><kbd><img src="src/shared/agent-icons/muse.png" alt="Muse logo" width="16" valign="middle" /> Muse</kbd></a> &nbsp;
-  <a href="https://deepseek-harness.github.io/deepseek-harness/"><kbd><img src="src/shared/agent-icons/dsh.png" alt="DeepSeek Harness logo" width="16" valign="middle" /> DeepSeek Harness</kbd></a> &nbsp;
-  <a href="https://zcode.z.ai/en/docs"><kbd><img src="src/shared/agent-icons/zcode.png" alt="ZCode logo" width="16" valign="middle" /> ZCode</kbd></a> &nbsp;
-  <a href="https://opencode.ai/docs/cli/"><kbd><img src="https://www.google.com/s2/favicons?domain=opencode.ai&sz=64" alt="OpenCode logo" width="16" valign="middle" /> OpenCode</kbd></a> &nbsp;
-  <a href="https://mimo.xiaomi.com/coder"><kbd><img src="https://www.google.com/s2/favicons?domain=mimo.xiaomi.com&sz=64" alt="MiMo Code logo" width="16" valign="middle" /> MiMo Code</kbd></a> &nbsp;
-  <a href="https://ampcode.com/manual#install"><kbd><img src="https://www.google.com/s2/favicons?domain=ampcode.com&sz=64" alt="Amp logo" width="16" valign="middle" /> Amp</kbd></a> &nbsp;
-  <a href="https://openclaude.gitlawb.com/"><kbd><img src="resources/openclaude-logo.png" alt="OpenClaude logo" width="16" valign="middle" /> OpenClaude</kbd></a> &nbsp;
-  <a href="https://antigravity.google/docs/cli-overview"><kbd><img src="https://www.google.com/s2/favicons?domain=antigravity.google&sz=64" alt="Antigravity logo" width="16" valign="middle" /> Antigravity</kbd></a> &nbsp;
-  <a href="https://pi.dev"><kbd><img src="https://pi.dev/favicon.svg" alt="Pi logo" width="16" valign="middle" /> Pi</kbd></a> &nbsp;
-  <a href="https://omp.sh"><kbd><img src="https://omp.sh/favicon.svg" alt="oh-my-pi logo" width="16" valign="middle" /> oh-my-pi</kbd></a> &nbsp;
-  <a href="https://hermes-agent.nousresearch.com/docs/"><kbd><img src="https://www.google.com/s2/favicons?domain=nousresearch.com&sz=64" alt="Hermes Agent logo" width="16" valign="middle" /> Hermes Agent</kbd></a> &nbsp;
-  <a href="https://devin.ai/cli"><kbd><img src="https://www.google.com/s2/favicons?domain=devin.ai&sz=64" alt="Devin logo" width="16" valign="middle" /> Devin</kbd></a> &nbsp;
-  <a href="https://block.github.io/goose/docs/quickstart/"><kbd><img src="https://www.google.com/s2/favicons?domain=goose-docs.ai&sz=64" alt="Goose logo" width="16" valign="middle" /> Goose</kbd></a> &nbsp;
-  <a href="https://docs.augmentcode.com/cli/overview"><kbd><img src="https://www.google.com/s2/favicons?domain=augmentcode.com&sz=64" alt="Auggie logo" width="16" valign="middle" /> Auggie</kbd></a> &nbsp;
-  <a href="https://github.com/autohandai/code-cli"><kbd><img src="https://www.google.com/s2/favicons?domain=autohand.ai&sz=64" alt="Autohand Code logo" width="16" valign="middle" /> Autohand Code</kbd></a> &nbsp;
-  <a href="https://github.com/charmbracelet/crush"><kbd><img src="https://www.google.com/s2/favicons?domain=charm.sh&sz=64" alt="Charm logo" width="16" valign="middle" /> Charm</kbd></a> &nbsp;
-  <a href="https://docs.cline.bot/cline-cli/overview"><kbd><img src="https://www.google.com/s2/favicons?domain=cline.bot&sz=64" alt="Cline logo" width="16" valign="middle" /> Cline</kbd></a> &nbsp;
-  <a href="https://www.codebuddy.ai/cli"><kbd><img src="https://www.google.com/s2/favicons?domain=codebuddy.ai&sz=64" alt="CodeBuddy logo" width="16" valign="middle" /> CodeBuddy</kbd></a> &nbsp;
-  <a href="https://www.codebuff.com/docs/help/quick-start"><kbd><img src="https://www.google.com/s2/favicons?domain=codebuff.com&sz=64" alt="Codebuff logo" width="16" valign="middle" /> Codebuff</kbd></a> &nbsp;
-  <a href="https://freebuff.com"><kbd><img src="src/shared/agent-icons/freebuff.png" alt="Freebuff logo" width="16" valign="middle" /> Freebuff</kbd></a> &nbsp;
-  <a href="https://commandcode.ai/docs/quickstart"><kbd><img src="https://www.google.com/s2/favicons?domain=commandcode.ai&sz=64" alt="Command Code logo" width="16" valign="middle" /> Command Code</kbd></a> &nbsp;
-  <a href="https://docs.continue.dev/guides/cli"><kbd><img src="https://www.google.com/s2/favicons?domain=continue.dev&sz=64" alt="Continue logo" width="16" valign="middle" /> Continue</kbd></a> &nbsp;
-  <a href="https://docs.factory.ai/cli/getting-started/quickstart"><kbd><img src="docs/assets/droid-logo.svg" alt="Droid logo" width="16" valign="middle" /> Droid</kbd></a> &nbsp;
-  <a href="https://kilo.ai/docs/cli"><kbd><img src="https://raw.githubusercontent.com/Kilo-Org/kilocode/main/packages/kilo-vscode/assets/icons/kilo-light.svg" alt="Kilocode logo" width="16" valign="middle" /> Kilocode</kbd></a> &nbsp;
-  <a href="https://www.kimi.com/code/docs/en/kimi-code-cli/getting-started.html"><kbd><img src="https://www.google.com/s2/favicons?domain=moonshot.cn&sz=64" alt="Kimi logo" width="16" valign="middle" /> Kimi</kbd></a> &nbsp;
-  <a href="https://kiro.dev/docs/cli/"><kbd><img src="https://www.google.com/s2/favicons?domain=kiro.dev&sz=64" alt="Kiro logo" width="16" valign="middle" /> Kiro</kbd></a> &nbsp;
-  <a href="https://github.com/mistralai/mistral-vibe"><kbd><img src="https://www.google.com/s2/favicons?domain=mistral.ai&sz=64" alt="Mistral Vibe logo" width="16" valign="middle" /> Mistral Vibe</kbd></a> &nbsp;
-  <a href="https://github.com/QwenLM/qwen-code"><kbd><img src="https://www.google.com/s2/favicons?domain=qwenlm.github.io&sz=64" alt="Qwen Code logo" width="16" valign="middle" /> Qwen Code</kbd></a> &nbsp;
-  <a href="https://support.atlassian.com/rovo/docs/install-and-run-rovo-dev-cli-on-your-device/"><kbd><img src="https://www.google.com/s2/favicons?domain=atlassian.com&sz=64" alt="Rovo Dev logo" width="16" valign="middle" /> Rovo Dev</kbd></a> &nbsp;
-  <kbd>+ any CLI agent</kbd>
-</p>
-
----
-
-## Install
-
-### Desktop — macOS, Windows, Linux
-
-- **[Download from onOrca.dev](https://onorca.dev/download)**
-- Or grab a build directly: [macOS Apple Silicon](https://github.com/stablyai/orca/releases/latest/download/orca-macos-arm64.dmg) · [macOS Intel](https://github.com/stablyai/orca/releases/latest/download/orca-macos-x64.dmg) · [Windows (.exe)](https://github.com/stablyai/orca/releases/latest/download/orca-windows-setup.exe) · [Linux AppImage](https://github.com/stablyai/orca/releases/latest/download/orca-linux.AppImage) · [All builds](https://github.com/stablyai/orca/releases/latest)
-
-_Or via a package manager:_
-
-```bash
-# macOS (Homebrew)
-brew install --cask stablyai/orca/orca
-
-# Arch Linux (AUR) — or stably-orca-git to build from source
-yay -S stably-orca-bin
+```text
+마이크 → 로컬 / ElevenLabs STT → 사용자 자막 → 선택한 모드 + Codex 세션
+                                                ↓
+                                        AI 텍스트 스트리밍
+                                                ↓
+                                       AI 자막 + 로컬 / ElevenLabs TTS
 ```
 
-### Mobile Companion — iOS, Android
+| 단계      | 기본 방향                                           | 비용·부하                                        |
+| --------- | --------------------------------------------------- | ------------------------------------------------ |
+| STT       | Orca에 포함된 한국어 Zipformer 스트리밍 경로 재사용 | 로컬 CPU 처리, 음성 API 호출 요금 없음           |
+| LLM       | Orca의 기존 Codex 인증·채팅 세션 재사용             | 사용 중인 구독의 사용량과 제한 적용              |
+| TTS       | 운영체제에 설치된 로컬 한국어 음성 사용             | 별도 TTS API 요금 없음, 음성 설치 여부 확인 필요 |
+| 작업 실행 | 선택한 프로젝트의 기존 Codex 작업 경로              | 세션의 권한·승인 설정 적용                       |
 
-Pair with your desktop app to monitor and steer your agents from your phone.
+한국어 스트리밍 STT는 CPU 1개 스레드를 사용합니다. Windows Heami로 생성한 7.74초 음성을 실제 빌드의 STT 워커로 인식하는 점검에서 모델 로드 약 2.46초, 로드 후 인식 처리 약 0.65초, 프로세스 메모리 약 258 MiB와 부분 자막을 확인했습니다. 일부 단어는 오인식됐습니다. 합성 음성을 이용한 실행 점검이므로 실제 마이크 정확도나 대화 지연의 기준값은 아닙니다. 한국어·영어 혼용 품질도 실사용 검증이 필요합니다.
 
-- **iOS:** [Download on the App Store](https://apps.apple.com/us/app/orca-ide/id6766130217)
-- **Android:** [Download APK](https://www.onorca.dev/download/android) · [Install guide](https://www.onorca.dev/docs/android-apk)
+로컬 TTS는 Web Speech API가 [`localService`](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisVoice/localService)를 로컬로 보고한 한국어 음성만 선택합니다. 지원 여부는 운영체제와 Electron 환경에 따라 달라지며, 모델 파일 다운로드에는 네트워크와 디스크 공간이 필요합니다. ElevenLabs 옵션은 앱에서 직접 연결하며 새 상주 서비스를 추가하지 않습니다.
 
----
+Codex 인증은 기존 세션을 통해 사용합니다. OAuth 토큰을 추출하거나 저장소에 복사하는 방식은 사용하지 않습니다. Codex 구독이 별도의 유료 STT·TTS API 이용권을 제공하는 것으로 가정하지 않습니다.
 
-## Community &amp; Support
+이 구성은 텍스트를 거치는 STT → LLM → TTS 파이프라인입니다. 음성을 직접 이해하고 생성하는 STS 모델과 비교해 응답 지연, 억양 표현, 동시 대화 처리에 차이가 있을 수 있습니다.
 
-- **Discord:** Join the community on **[Discord](https://discord.gg/fzjDKHxv8Q)**.
-- **Twitter / X:** Follow **[@orca_build](https://x.com/orca_build)** for updates and announcements.
-- **WeChat:** Group 12 is full. Scan to join the Orca community WeChat group 13.
+## 개발 현황
 
-  <img src="docs/assets/wechat-qr-group13.jpg" alt="WeChat group 13 QR code for the Orca community" width="160" />
+| 항목                                              | 상태                                                 |
+| ------------------------------------------------- | ---------------------------------------------------- |
+| 프로젝트·워크트리·터미널 관리                     | 원본 Orca 기반 기능                                  |
+| Codex 로그인 및 채팅·작업 실행                    | 원본 Orca 기반 기능                                  |
+| 한국어 로컬 스트리밍 음성 입력                    | 원본 Orca 기반 기능                                  |
+| 상황별 작업 모드와 전환 UI                        | Windows 빌드·기능 테스트 통과, 실사용 검증 전        |
+| 연속 음성 대화 패널과 실시간 자막                 | 소스 구현, 실제 마이크 검증 전                       |
+| 응답 문장별 로컬 TTS와 자막 연결                  | 소스 구현, 실제 음성 재생 검증 전                    |
+| ElevenLabs 키 등록·실시간 STT·TTS·목소리 미리듣기 | Windows 빌드·모의 API 테스트 통과, 실제 연결 검증 전 |
+| 발화 종료 감지와 자동 전송                        | 기존 STT 종료 이벤트에 연결, 실사용 검증 전          |
+| 답변 읽기 중단 및 다음 발화 처리                  | 소스 구현, 통합 검증 전                              |
+| Windows 마이크·음성·성능 검증                     | 합성 음성 실행 점검 통과, 실제 마이크·스피커 검증 전 |
 
-- **Feedback &amp; Ideas:** We ship fast. Missing something? [Request a new feature](https://github.com/stablyai/orca/issues).
-- **Privacy:** See the [privacy &amp; telemetry docs](https://www.onorca.dev/docs/telemetry) for what anonymous usage data Orca collects and how to opt out.
-- **Show Support:** [Star](https://github.com/stablyai/orca) this repo to follow along with our daily ships.
+초기 사용 환경은 Windows와 한국어입니다. 기존 Orca의 다른 운영체제·원격 작업 경로와의 호환성도 변경 시 함께 확인합니다.
 
----
+## 소스에서 실행
 
-## Developing
+필요한 도구는 Node.js 24, `package.json`에 고정된 pnpm 버전, [`config/.bun-version`](config/.bun-version)에 지정된 Bun 버전입니다. 플랫폼별 빌드 준비는 [원본 기여 가이드](.github/CONTRIBUTING.md)를 참고하세요.
 
-Want to contribute or run locally? See our [CONTRIBUTING.md](.github/CONTRIBUTING.md) guide.
+개인 포크의 저장소 이름은 `Orca-STS`입니다.
 
-The relay that pairs the mobile app with a desktop host is also in this repository under
-[`cloud/`](cloud/README.md), with a separate pnpm workspace and setup guide.
+```sh
+git clone https://github.com/kgr0831/Orca-STS.git
+cd Orca-STS
+git remote add upstream https://github.com/stablyai/orca.git
+pnpm install --frozen-lockfile
+pnpm dev --worktree-profile
+```
 
-<a href="https://github.com/stablyai/orca/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=stablyai/orca" alt="Orca contributors" />
-</a>
+개발 실행은 별도 개발 프로필을 사용합니다. 개발 프로필에서 Codex 로그인, 마이크 권한, Settings → Voice의 한국어 로컬 모델을 설정해야 합니다. 음성 기능은 실제 실행 검증이 필요한 개발 코드입니다.
 
-<p align="center">
-  <img src="docs/assets/star-history.png" alt="GitHub star history chart for stablyai/orca" width="880" />
-</p>
+## 브랜치·PR 개발 흐름
 
-## Signed Builds
+- `origin`: 개인 포크 `kgr0831/Orca-STS`
+- `upstream`: 원본 `stablyai/orca`
+- `main`: 검증된 변경을 통합하는 브랜치
+- `feat/*`, `fix/*`, `docs/*`: 기능·수정·문서 작업 브랜치
 
-Windows code signing sponored/provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+```sh
+git switch main
+git pull --ff-only origin main
+git switch -c feat/voice-conversation
 
-## License
+# 변경 후 관련 검증 실행
+pnpm check:changed --maxWorkers=2
 
-Orca is free and open source under the [MIT License](LICENSE).
+# 변경한 파일을 지정해 스테이징하고 커밋
+git add path/to/changed-file
+git commit -m "feat: add voice conversation"
+git push -u origin feat/voice-conversation
+
+gh pr create --repo kgr0831/Orca-STS --base main --head feat/voice-conversation
+```
+
+PR은 이 포크의 `main`을 대상으로 만듭니다. 리뷰와 필요한 CI 검증을 통과한 뒤 머지하고, 원본 업데이트는 별도 동기화 브랜치에서 통합해 음성 기능과의 충돌을 확인합니다.
+
+## 빌드와 배포
+
+Windows x64 설치 파일은 `Orca-STS-<버전>-windows-x64.exe`입니다. 배포본은 [이 포크의 Releases](https://github.com/kgr0831/Orca-STS/releases)에서 받습니다. 원본 Orca의 다운로드 링크는 이 포크의 음성 대화 기능을 포함하지 않습니다.
+
+포크의 **Actions → Orca-STS validation and Windows build**에서 검증과 Windows 빌드를 실행할 수 있습니다. [`orca-sts-windows.yml`](.github/workflows/orca-sts-windows.yml)은 개인 포크에서만 실행되며, `feat/elevenlabs-voice` 푸시와 `main` 대상 PR 검사에서도 사용합니다. 포크에서 Actions가 비활성화되어 있으면 먼저 활성화해야 합니다.
+
+GitHub 실행기에 고정된 Node·pnpm·Bun과 의존성을 설치합니다. 전체 변경 검사와 관련 회귀 테스트는 원본 단위 테스트와 같은 Linux 환경에서 실행합니다. Windows에서는 음성·MAS·기본 채팅·업데이트 격리 테스트, 타입 검사, 앱 빌드와 NSIS 패키징을 수행합니다. 성공 시 Windows 설치 파일, SHA-256 체크섬, 소스 커밋을 3일 동안 보관합니다. 포크의 PR 전체 워크플로에서 두 작업의 성공을 `PR checks passed`가 확인합니다. 이 빌드 작업에는 릴리즈 쓰기 권한이 없으며 원본 저장소에 게시하지 않습니다.
+
+Windows 빌드 명령은 다음과 같습니다.
+
+```sh
+pnpm typecheck
+pnpm build:release
+pnpm ensure:electron-runtime
+pnpm exec electron-builder --config config/electron-builder-sts.config.cjs --win --x64 --publish never
+```
+
+포크 패키지는 `Orca-STS`, 앱 식별자 `com.kgr0831.orca.sts`, 버전 `<원본 버전>-sts.<번호>`를 사용합니다. `ORCA_STS_VERSION`으로 다음 배포 버전을 지정할 수 있습니다. 원본 Orca와 설치·데스크톱 프로필을 분리하고 원본의 파일 연결과 URL 프로토콜을 등록하지 않습니다. 기존 로그인 파일을 복사하지 않으므로 첫 실행에서 Codex 로그인과 음성 설정이 필요할 수 있습니다.
+
+첫 배포는 코드 서명이 없는 Windows x64 설치본입니다. 자동 업데이트와 원본·로컬 빌드로 전환하는 기능은 차단하고 [개인 포크의 릴리즈](https://github.com/kgr0831/Orca-STS/releases)에서 수동으로 업데이트합니다. 릴리즈는 PR 검사·머지·설치 검증 후 해당 포크에 게시합니다. 실제 배포와 설치 완료 여부는 릴리즈 페이지에서 확인하세요.
+
+## 원본 프로젝트와 라이선스
+
+Orca-STS는 [stablyai/orca](https://github.com/stablyai/orca)의 개인 포크입니다. 원본의 개발 환경, 음성 입력, 에이전트 연동 기능 위에 음성 대화 경험을 추가합니다.
+
+- [원본 Orca 문서](https://www.onorca.dev/docs)
+- [기여 가이드](.github/CONTRIBUTING.md)
+- [UI 스타일 가이드](docs/STYLEGUIDE.md)
+- [MIT 라이선스 및 원본 저작권 고지](LICENSE)
+
+원본 라이선스와 저작권 고지를 유지합니다.

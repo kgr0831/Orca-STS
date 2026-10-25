@@ -13,7 +13,7 @@ import { recordStoppedSession, waitForStoppedSession } from './dictation-stopped
 import { translate } from '@/i18n/i18n'
 import { showDictationStartErrorToast } from './dictation-start-error-toast'
 import { useHoldDictationGesture } from './use-hold-dictation-gesture'
-import { DICTATION_CONTROL_EVENT, type DictationControlAction } from './dictation-control-events'
+import { useDictationControl } from './use-dictation-control'
 import { publishDictationMeter } from './dictation-meter-store'
 
 export function DictationController() {
@@ -68,6 +68,7 @@ export function DictationController() {
       // event so old finals cannot be mistaken for the next dictation run.
       await waitForStoppedSession(sessionId, stoppedSessionIdsRef, stoppedResolversRef)
       const sessionErrored = erroredSessionIdsRef.current.delete(sessionId)
+      const completedTarget = insertionTargetRef.current
       if (!sessionErrored && !finalTranscriptReceivedRef.current && getCapturedChunkCount() > 0) {
         toast.message(
           translate(
@@ -87,6 +88,9 @@ export function DictationController() {
       dictationStateRef.current = 'idle'
       setDictationState('idle')
       setPartialTranscript('')
+      if (!sessionErrored && completedTarget?.kind === 'conversation') {
+        completedTarget.target.onStopped()
+      }
     },
     [setDictationState, setPartialTranscript, stopCapture, getCapturedChunkCount]
   )
@@ -222,6 +226,9 @@ export function DictationController() {
       }
       discardBufferedAudio()
       const message = String(err)
+      if (insertionTargetRef.current?.kind === 'conversation') {
+        insertionTargetRef.current.target.onError(message)
+      }
       insertionTargetRef.current = null
       intentionalTargetCancellationRef.current = false
       stopRequestedDuringStartRef.current = false
@@ -311,34 +318,12 @@ export function DictationController() {
     stopDictation
   ])
 
-  useEffect(() => {
-    const canDictate = (): boolean => Boolean(settings?.voice?.enabled && settings.voice.sttModel)
-    const handleControl = (event: Event): void => {
-      if (!canDictate() || dictationStateRef.current === 'stopping') {
-        return
-      }
-      const action = (event as CustomEvent<DictationControlAction>).detail
-      if (action === 'start') {
-        if (dictationStateRef.current === 'idle') {
-          void startDictation()
-        }
-        return
-      }
-      if (action === 'stop') {
-        if (dictationStateRef.current === 'listening' || dictationStateRef.current === 'starting') {
-          void stopDictation()
-        }
-        return
-      }
-      if (dictationStateRef.current === 'listening' || dictationStateRef.current === 'starting') {
-        void stopDictation()
-      } else {
-        void startDictation()
-      }
-    }
-    document.addEventListener(DICTATION_CONTROL_EVENT, handleControl)
-    return () => document.removeEventListener(DICTATION_CONTROL_EVENT, handleControl)
-  }, [settings?.voice?.enabled, settings?.voice?.sttModel, startDictation, stopDictation])
+  useDictationControl({
+    enabled: Boolean(settings?.voice?.enabled && settings.voice.sttModel),
+    state: dictationStateRef,
+    start: startDictation,
+    stop: stopDictation
+  })
 
   useHoldDictationGesture({
     dictationStateRef,
@@ -357,6 +342,9 @@ export function DictationController() {
         return
       }
       setPartialTranscript(data.text)
+      if (insertionTargetRef.current?.kind === 'conversation') {
+        insertionTargetRef.current.target.onPartial(data.text)
+      }
     })
 
     const cleanupFinal = window.api.speech.onFinalTranscript((data) => {
@@ -392,6 +380,9 @@ export function DictationController() {
         return
       }
       const sessionId = data.sessionId
+      if (insertionTargetRef.current?.kind === 'conversation') {
+        insertionTargetRef.current.target.onError(data.error)
+      }
       erroredSessionIdsRef.current.add(sessionId)
       dictationRunRef.current += 1
       activeSessionIdRef.current = null

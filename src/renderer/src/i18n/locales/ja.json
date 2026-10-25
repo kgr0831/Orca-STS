@@ -1,4 +1,78 @@
 {
+  "stsVoice": {
+    "close": "音声会話を閉じる",
+    "open": "音声会話",
+    "notSent": "送信できませんでした。テキストを保持し、チャットの準備ができたら送信してください。",
+    "unconfirmed": "送信を確認できませんでした。再送する前にチャットを確認してください。",
+    "starting": "マイクを起動中…",
+    "processing": "認識を完了中…",
+    "listening": "聞き取り中",
+    "sending": "送信中…",
+    "speaking": "回答を読み上げ中",
+    "working": "Codex が作業中",
+    "ready": "準備完了",
+    "setup": "設定 → 音声で音声入力を有効にし、韓国語ストリーミングまたはElevenLabs Scribeを選択してください。",
+    "settings": "音声設定",
+    "automatic": "発話後に送信し、回答後に再び聞き取る",
+    "read": "回答を読み上げる",
+    "noVoice": "設定 → 音声で選択した音声を設定してください。字幕は引き続き使用できます。",
+    "speechError": "音声を再生できませんでした。回答の読み上げをオフにしてからオンにし、再試行してください。",
+    "you": "あなた",
+    "finish": "発話を終了",
+    "start": "発話を開始",
+    "send": "テキストを送信",
+    "pause": "音声会話を一時停止",
+    "stopAgent": "Codex を停止",
+    "assistant": "Codex"
+  },
+  "stsWorkModes": {
+    "label": "作業モード",
+    "nextMessage": "次のメッセージから適用されます。",
+    "default": {
+      "label": "標準",
+      "description": "既存のセッションの指示に従います。"
+    },
+    "brainstorm": {
+      "label": "ブレインストーミング",
+      "description": "対話でアイデアを広げ、代替案を比較します。"
+    },
+    "requirements": {
+      "label": "要件整理",
+      "description": "目標、範囲、制約、完了条件を明確にします。"
+    },
+    "design": {
+      "label": "設計",
+      "description": "既存コードを確認し、実装前に構成を検討します。"
+    },
+    "implement": {
+      "label": "開発",
+      "description": "依頼された変更を実装し、関連する検証を行います。"
+    },
+    "debug": {
+      "label": "デバッグ",
+      "description": "問題を再現し、原因を調査して修正を検証します。"
+    },
+    "review": {
+      "label": "コードレビュー",
+      "description": "ファイルを編集せずに変更を確認し、問題を報告します。"
+    },
+    "document": {
+      "label": "文書化",
+      "description": "文書、決定事項、引き継ぎ記録を作成・更新します。"
+    },
+    "general": {
+      "label": "一般作業",
+      "description": "調査、比較、計画など、依頼された作業を行います。"
+    },
+    "mas": {
+      "label": "難しい作業を委任 (MAS)",
+      "model": "専門作業モデル",
+      "automatic": "自動",
+      "agentChoice": "Codexが選択",
+      "unlisted": "現在の一覧にありません",
+      "description": "調査・複雑な推論・具体的な作業を高い推論レベルで委任するよう依頼します。同時に最大2つを依頼し、実際の活動はチャットに表示されます。Codexの利用枠をより多く消費します。"
+    }
+  },
   "app": {
     "saving": {
       "delayedTitle": "プロファイルのストレージ処理に通常より時間がかかっています",
@@ -21179,5 +21253,33 @@
       "pending": "削除が進行中です。"
     },
     "rowActions": "{{name}} の操作"
+  },
+  "elevenLabsVoice": {
+    "title": "ElevenLabs 音声オプション",
+    "cost": "任意のクラウドSTT/TTSです。選択した音声または応答テキストをElevenLabsに送信します。試聴を含むアカウントの利用料金が適用されます。キー保存だけではプロバイダーは変わりません。",
+    "key": "ElevenLabs APIキー",
+    "configured": "キー登録済み",
+    "enterKey": "APIキーを入力",
+    "save": "キーを保存",
+    "remove": "キーを削除",
+    "storage": "キーはこのコンピューターに暗号化して保存します。平文では保存しません。必要なSpeech to Text、Text to Speech、Voices読み取り権限を有効にしてください。",
+    "stt": "ElevenLabs STTには上の音声モデルでScribe v2 Realtimeを選択します。ローカルSTTとElevenLabs TTSの組み合わせも可能です。",
+    "output": "応答音声 (TTS)",
+    "local": "ローカル音声 · 無料",
+    "cloud": "ElevenLabs · 利用量に応じた料金",
+    "loading": "読み込み中…",
+    "load": "自分の音声を取得",
+    "voice": "音声",
+    "voiceId": "Voice ID（または最初の100音声から選択）",
+    "model": "TTSモデル",
+    "stop": "試聴を停止",
+    "preview": "試聴 · クレジット使用",
+    "tone": "少しゆっくり、落ち着いて明瞭に読み上げます。アカウントの韓国語音声を試聴して選択してください。",
+    "sample": "こんにちは。落ち着いてアイデアを整理し、次に取り組むことを一緒に考えましょう。",
+    "keyError": "キーを更新できませんでした。音声入力を停止し、暗号化ストレージを確認してください。",
+    "listError": "音声を取得できませんでした。キー、Voices読み取り権限、接続を確認してください。",
+    "previewError": "試聴に失敗しました。Voice ID、TTS権限、利用枠、接続を確認してください。",
+    "flash": "Flash v2.5",
+    "multilingual": "Multilingual v2"
   }
 }

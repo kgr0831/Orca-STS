@@ -1,4 +1,78 @@
 {
+  "stsVoice": {
+    "close": "음성 대화 닫기",
+    "open": "음성 대화",
+    "notSent": "전송하지 못했습니다. 내용을 보관하고 대화가 준비되면 다시 보내세요.",
+    "unconfirmed": "전송 여부를 확인하지 못했습니다. 다시 보내기 전에 대화 기록을 확인하세요.",
+    "starting": "마이크 시작 중…",
+    "processing": "음성 인식 마무리 중…",
+    "listening": "듣는 중",
+    "sending": "전송 중…",
+    "speaking": "답변 읽는 중",
+    "working": "Codex 작업 중",
+    "ready": "준비됨",
+    "setup": "설정 → 음성에서 음성 입력을 켜고 한국어 스트리밍 또는 ElevenLabs Scribe를 선택하세요.",
+    "settings": "음성 설정",
+    "automatic": "말이 끝나면 보내고 답변 후 다시 듣기",
+    "read": "답변 소리로 읽기",
+    "noVoice": "설정 → 음성에서 선택한 목소리를 설정하세요. 자막은 계속 사용할 수 있습니다.",
+    "speechError": "음성 재생에 실패했습니다. 답변 소리로 읽기를 껐다 켜서 다시 시도하세요.",
+    "you": "나",
+    "finish": "말하기 완료",
+    "start": "말하기 시작",
+    "send": "텍스트 보내기",
+    "pause": "음성 대화 일시정지",
+    "stopAgent": "Codex 작업 중단",
+    "assistant": "Codex"
+  },
+  "stsWorkModes": {
+    "label": "작업 모드",
+    "nextMessage": "다음 메시지부터 적용됩니다.",
+    "default": {
+      "label": "기본",
+      "description": "기존 세션의 지침을 따릅니다."
+    },
+    "brainstorm": {
+      "label": "브레인스토밍",
+      "description": "대화로 아이디어를 확장하고 대안을 비교합니다."
+    },
+    "requirements": {
+      "label": "요구사항 정리",
+      "description": "목표, 범위, 제약, 완료 기준을 구체화합니다."
+    },
+    "design": {
+      "label": "설계",
+      "description": "기존 코드를 살펴보고 구현 전 구조를 논의합니다."
+    },
+    "implement": {
+      "label": "개발 지시",
+      "description": "요청한 변경을 구현하고 관련 검증을 수행합니다."
+    },
+    "debug": {
+      "label": "디버깅",
+      "description": "문제를 재현하고 원인을 조사해 수정 결과를 검증합니다."
+    },
+    "review": {
+      "label": "코드 리뷰",
+      "description": "파일을 수정하지 않고 변경 사항과 발견한 문제를 검토합니다."
+    },
+    "document": {
+      "label": "문서화",
+      "description": "문서, 결정 사항, 인수인계 기록을 작성하거나 수정합니다."
+    },
+    "general": {
+      "label": "일반 작업",
+      "description": "조사, 비교, 계획 등 요청한 업무를 수행합니다."
+    },
+    "mas": {
+      "label": "어려운 작업 위임 (MAS)",
+      "model": "전문 작업 모델",
+      "automatic": "자동",
+      "agentChoice": "Codex가 선택",
+      "unlisted": "현재 목록에 없음",
+      "description": "조사·복잡한 판단·구체적인 작업을 높은 추론 수준으로 위임하도록 요청합니다. 동시에 최대 2개를 요청하며 실제 활동은 채팅에 표시됩니다. Codex 구독 사용량이 더 소모됩니다."
+    }
+  },
   "app": {
     "saving": {
       "delayedTitle": "프로필 저장소 작업에 평소보다 오래 걸리고 있습니다",
@@ -21179,5 +21253,33 @@
       "main": "기본 작업 트리가 보호됩니다."
     },
     "rowActions": "{{name}}에 대한 작업"
+  },
+  "elevenLabsVoice": {
+    "title": "ElevenLabs 음성 옵션",
+    "cost": "선택형 클라우드 STT/TTS입니다. 선택한 음성이나 답변 텍스트를 ElevenLabs로 전송하며 미리듣기를 포함해 계정 사용 요금이 적용됩니다. 키 저장만으로 제공자가 바뀌지는 않습니다.",
+    "key": "ElevenLabs API 키",
+    "configured": "키 등록됨",
+    "enterKey": "API 키 입력",
+    "save": "키 저장",
+    "remove": "키 삭제",
+    "storage": "키는 이 컴퓨터에 암호화하여 저장합니다. 평문 저장은 하지 않습니다. 필요한 Speech to Text / Text to Speech 및 Voices 읽기 권한을 허용하세요.",
+    "stt": "ElevenLabs STT는 위의 음성 모델에서 Scribe v2 Realtime을 선택하세요. 로컬 STT와 ElevenLabs TTS를 함께 사용할 수도 있습니다.",
+    "output": "답변 음성 (TTS)",
+    "local": "로컬 시스템 음성 · 무료",
+    "cloud": "ElevenLabs · 계정 사용량",
+    "loading": "불러오는 중…",
+    "load": "내 목소리 불러오기",
+    "voice": "목소리",
+    "voiceId": "Voice ID (또는 처음 100개 목소리에서 선택)",
+    "model": "TTS 모델",
+    "stop": "미리듣기 중지",
+    "preview": "미리듣기 · 크레딧 사용",
+    "tone": "조금 느린 속도로 차분하고 또렷하게 읽습니다. 계정의 한국어 목소리를 미리 들어보고 선택하세요.",
+    "sample": "안녕하세요. 편안하게 아이디어를 정리하고, 다음에 할 일을 함께 살펴보겠습니다.",
+    "keyError": "키를 변경하지 못했습니다. 받아쓰기를 중지하고 암호화 저장소를 사용할 수 있는지 확인하세요.",
+    "listError": "목소리를 불러오지 못했습니다. 키, Voices 읽기 권한과 인터넷 연결을 확인하세요.",
+    "previewError": "미리듣기에 실패했습니다. Voice ID, TTS 권한, 잔여 사용량과 연결을 확인하세요.",
+    "flash": "Flash v2.5",
+    "multilingual": "Multilingual v2"
   }
 }

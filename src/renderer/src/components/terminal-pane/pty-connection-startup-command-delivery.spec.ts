@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TERMINAL_PASTE_DIRECT_MAX_BYTES } from './terminal-paste-limits'
 import { makePaneKey } from '../../../../shared/stable-pane-id'
 import { toAppSshPtyId } from '../../../../shared/ssh-pty-id'
-import { flushAsyncTicks, drainPendingTimeouts } from './pty-connection-test-async'
+import { flushAsyncTicks } from './pty-connection-test-async'
 import {
   LEAF_1,
   createMockTransport,
@@ -395,12 +395,7 @@ export function registerPtyConnectionStartupCommandDeliveryTests(): void {
     })
 
     it('chunks large terminal-paste startup commands through the PTY before submitting', async () => {
-      const pendingTimeouts: (() => void)[] = []
-      const originalSetTimeout = globalThis.setTimeout
-      globalThis.setTimeout = vi.fn((fn: () => void) => {
-        pendingTimeouts.push(fn)
-        return 999 as unknown as ReturnType<typeof setTimeout>
-      }) as unknown as typeof setTimeout
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date', 'performance'] })
 
       try {
         const { connectPanePty } = await import('./pty-connection')
@@ -436,7 +431,7 @@ export function registerPtyConnectionStartupCommandDeliveryTests(): void {
         expect(capturedDataCallback.current).not.toBeNull()
 
         capturedDataCallback.current?.('user@host $ ')
-        await drainPendingTimeouts(pendingTimeouts)
+        await vi.advanceTimersByTimeAsync(1_000)
         await flushAsyncTicks()
 
         const writtenInput = transport.sendInput.mock.calls.map((call) => call[0])
@@ -446,17 +441,12 @@ export function registerPtyConnectionStartupCommandDeliveryTests(): void {
         expect(writtenInput.slice(0, -1).length).toBeGreaterThan(1)
         expect(transport.sendInput).not.toHaveBeenCalledWith(`${command}\r`)
       } finally {
-        globalThis.setTimeout = originalSetTimeout
+        vi.clearAllTimers()
       }
     })
 
     it('does not submit a terminal-paste startup command after the PTY changes mid-paste', async () => {
-      const pendingTimeouts: (() => void)[] = []
-      const originalSetTimeout = globalThis.setTimeout
-      globalThis.setTimeout = vi.fn((fn: () => void) => {
-        pendingTimeouts.push(fn)
-        return 999 as unknown as ReturnType<typeof setTimeout>
-      }) as unknown as typeof setTimeout
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date', 'performance'] })
 
       try {
         const { connectPanePty } = await import('./pty-connection')
@@ -499,14 +489,15 @@ export function registerPtyConnectionStartupCommandDeliveryTests(): void {
         expect(capturedDataCallback.current).not.toBeNull()
 
         capturedDataCallback.current?.('user@host $ ')
-        await drainPendingTimeouts(pendingTimeouts)
+        await vi.advanceTimersByTimeAsync(1_000)
         await flushAsyncTicks()
 
         expect(pane.terminal.paste).not.toHaveBeenCalled()
+        expect(transport.sendInput).toHaveBeenCalled()
         expect(transport.sendInput).not.toHaveBeenCalledWith('\r')
         expect(transport.sendInput.mock.calls.map((call) => call[0]).join('')).not.toBe(command)
       } finally {
-        globalThis.setTimeout = originalSetTimeout
+        vi.clearAllTimers()
       }
     })
   })

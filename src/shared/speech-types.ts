@@ -5,7 +5,8 @@ export type SpeechModelType =
   | 'senseVoice'
   | 'nemo-ctc'
   | 'openai'
-export type SpeechModelProvider = 'local' | 'openai'
+  | 'elevenlabs'
+export type SpeechModelProvider = 'local' | 'openai' | 'elevenlabs'
 
 export type ModelingUnit = 'bpe' | 'cjkchar' | 'cjkchar+bpe'
 
@@ -75,8 +76,21 @@ export type VoiceSettings = {
   terminalConfirmBeforeInsert: boolean
   userModels: UserModelConfig[]
   openAiApiKeyConfigured: boolean
+  elevenLabsApiKeyConfigured?: boolean
+  ttsProvider?: 'local' | 'elevenlabs'
+  elevenLabsVoiceId?: string
+  elevenLabsTtsModel?: 'eleven_flash_v2_5' | 'eleven_multilingual_v2'
   /** null = system default input device */
   microphoneDeviceId: string | null
   /** Cached label for display when the preferred device is unplugged */
   microphoneDeviceLabel: string | null
+}
+
+export type ElevenLabsVoice = { id: string; name: string }
+
+export type ElevenLabsSpeechRequest = {
+  requestId: string
+  text: string
+  voiceId: string
+  modelId: 'eleven_flash_v2_5' | 'eleven_multilingual_v2'
 }

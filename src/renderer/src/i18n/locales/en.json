@@ -1,4 +1,78 @@
 {
+  "stsVoice": {
+    "close": "Close voice conversation",
+    "open": "Voice conversation",
+    "notSent": "Not sent. Keep the text and send when the chat is ready.",
+    "unconfirmed": "Delivery is unconfirmed. Check the chat before sending again.",
+    "starting": "Starting microphone…",
+    "processing": "Finishing recognition…",
+    "listening": "Listening",
+    "sending": "Sending…",
+    "speaking": "Reading response",
+    "working": "Codex is working",
+    "ready": "Ready",
+    "setup": "Enable voice input and select Korean streaming or ElevenLabs Scribe in Settings → Voice.",
+    "settings": "Voice settings",
+    "automatic": "Send after a pause and listen again after the reply",
+    "read": "Read replies aloud",
+    "noVoice": "Set up the selected voice in Settings → Voice. Captions remain available.",
+    "speechError": "Audio playback failed. Turn Read replies aloud off and on to retry.",
+    "you": "You",
+    "finish": "Finish speaking",
+    "start": "Start speaking",
+    "send": "Send text",
+    "pause": "Pause conversation",
+    "stopAgent": "Stop Codex",
+    "assistant": "Codex"
+  },
+  "stsWorkModes": {
+    "label": "Work mode",
+    "nextMessage": "Applies to your next messages.",
+    "default": {
+      "label": "Default",
+      "description": "Follow the existing session instructions."
+    },
+    "brainstorm": {
+      "label": "Brainstorm",
+      "description": "Explore ideas and compare alternatives through conversation."
+    },
+    "requirements": {
+      "label": "Requirements",
+      "description": "Clarify goals, scope, constraints, and acceptance criteria."
+    },
+    "design": {
+      "label": "Design",
+      "description": "Inspect existing code and discuss architecture before implementation."
+    },
+    "implement": {
+      "label": "Development",
+      "description": "Implement the requested changes and run relevant checks."
+    },
+    "debug": {
+      "label": "Debug",
+      "description": "Reproduce the issue, investigate its cause, and verify a fix."
+    },
+    "review": {
+      "label": "Code review",
+      "description": "Inspect changes and report findings without editing files."
+    },
+    "document": {
+      "label": "Documentation",
+      "description": "Draft or update documentation, decisions, and handoff notes."
+    },
+    "general": {
+      "label": "General tasks",
+      "description": "Research, compare, plan, and carry out the requested work."
+    },
+    "mas": {
+      "label": "Delegate difficult work (MAS)",
+      "model": "Specialist model",
+      "automatic": "Automatic",
+      "agentChoice": "Codex chooses",
+      "unlisted": "Not in current catalog",
+      "description": "Ask Codex to delegate research, complex reasoning, and detailed tasks with high reasoning effort. Up to two specialists per request; actual activity appears in the chat. Uses more of your Codex allowance."
+    }
+  },
   "csv": {
     "detectingDelimiter": "Detecting delimiter…",
     "indexProgress": "Indexing CSV… {{percent}}%",
@@ -21273,5 +21347,33 @@
     "restartLocal": "Restart local daemon",
     "killAllLocal": "Kill all local sessions",
     "killFailed": "The terminal could not be ended. Last-observed sessions are retained."
+  },
+  "elevenLabsVoice": {
+    "keyError": "Could not update the key. Stop dictation and check that encrypted storage is available.",
+    "listError": "Could not load voices. Check your key, Voices read permission, and connection.",
+    "sample": "Hello. Let us calmly organize your ideas and decide what to do next.",
+    "previewError": "Preview failed. Check the voice ID, TTS permission, quota, and connection.",
+    "title": "ElevenLabs voice options",
+    "cost": "Optional cloud STT/TTS. Selected audio or reply text is sent to ElevenLabs. Account usage charges apply, including previews. Saving a key does not change your providers.",
+    "key": "ElevenLabs API key",
+    "configured": "Key saved",
+    "enterKey": "Enter your API key",
+    "save": "Save key",
+    "remove": "Remove key",
+    "storage": "The key is stored encrypted on this computer. Plaintext storage is not used. Enable Speech to Text / Text to Speech and Voices read permissions as needed.",
+    "stt": "For ElevenLabs STT, choose Scribe v2 Realtime in Speech Model above. You can combine local STT with ElevenLabs TTS.",
+    "output": "Response voice (TTS)",
+    "local": "Local system voice · free",
+    "cloud": "ElevenLabs · account usage",
+    "loading": "Loading…",
+    "load": "Load my voices",
+    "voice": "Voice",
+    "voiceId": "Voice ID (or choose from your first 100 voices)",
+    "model": "TTS model",
+    "stop": "Stop preview",
+    "preview": "Preview · uses credits",
+    "tone": "Calm, clear delivery with a slightly slower pace. Preview a Korean voice from your account before selecting it.",
+    "flash": "Flash v2.5",
+    "multilingual": "Multilingual v2"
   }
 }

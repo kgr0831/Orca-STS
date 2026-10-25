@@ -1,4 +1,78 @@
 {
+  "stsVoice": {
+    "close": "Cerrar conversación de voz",
+    "open": "Conversación de voz",
+    "notSent": "No enviado. Conserva el texto y envíalo cuando el chat esté listo.",
+    "unconfirmed": "La entrega no está confirmada. Revisa el chat antes de volver a enviar.",
+    "starting": "Iniciando micrófono…",
+    "processing": "Finalizando reconocimiento…",
+    "listening": "Escuchando",
+    "sending": "Enviando…",
+    "speaking": "Leyendo respuesta",
+    "working": "Codex está trabajando",
+    "ready": "Listo",
+    "setup": "Activa la entrada de voz y elige coreano en streaming o ElevenLabs Scribe en Ajustes → Voz.",
+    "settings": "Ajustes de voz",
+    "automatic": "Enviar tras una pausa y escuchar de nuevo después de la respuesta",
+    "read": "Leer respuestas en voz alta",
+    "noVoice": "Configura la voz elegida en Ajustes → Voz. Los subtítulos siguen disponibles.",
+    "speechError": "Falló la reproducción. Desactiva y activa Leer respuestas en voz alta para reintentar.",
+    "you": "Tú",
+    "finish": "Terminar de hablar",
+    "start": "Empezar a hablar",
+    "send": "Enviar texto",
+    "pause": "Pausar conversación",
+    "stopAgent": "Detener Codex",
+    "assistant": "Codex"
+  },
+  "stsWorkModes": {
+    "label": "Modo de trabajo",
+    "nextMessage": "Se aplica a tus próximos mensajes.",
+    "default": {
+      "label": "Predeterminado",
+      "description": "Sigue las instrucciones de la sesión actual."
+    },
+    "brainstorm": {
+      "label": "Lluvia de ideas",
+      "description": "Explora ideas y compara alternativas mediante la conversación."
+    },
+    "requirements": {
+      "label": "Requisitos",
+      "description": "Aclara objetivos, alcance, restricciones y criterios de aceptación."
+    },
+    "design": {
+      "label": "Diseño",
+      "description": "Examina el código existente y analiza la arquitectura antes de implementar."
+    },
+    "implement": {
+      "label": "Desarrollo",
+      "description": "Implementa los cambios solicitados y ejecuta las comprobaciones pertinentes."
+    },
+    "debug": {
+      "label": "Depuración",
+      "description": "Reproduce el problema, investiga su causa y verifica la solución."
+    },
+    "review": {
+      "label": "Revisión de código",
+      "description": "Examina los cambios e informa de los hallazgos sin editar archivos."
+    },
+    "document": {
+      "label": "Documentación",
+      "description": "Redacta o actualiza documentación, decisiones y notas de traspaso."
+    },
+    "general": {
+      "label": "Tareas generales",
+      "description": "Investiga, compara, planifica y realiza el trabajo solicitado."
+    },
+    "mas": {
+      "label": "Delegar tareas difíciles (MAS)",
+      "model": "Modelo especialista",
+      "automatic": "Automático",
+      "agentChoice": "Codex elige",
+      "unlisted": "No está en el catálogo actual",
+      "description": "Solicita a Codex que delegue investigaciones, razonamientos complejos y tareas detalladas con un esfuerzo de razonamiento alto. Se solicitan como máximo dos especialistas a la vez; la actividad real aparece en el chat. Consume más de tu cuota de Codex."
+    }
+  },
   "app": {
     "saving": {
       "delayedTitle": "El almacenamiento del perfil está tardando más de lo habitual",
@@ -21180,5 +21254,33 @@
       "pending": "La eliminación está en curso."
     },
     "rowActions": "Acciones para {{name}}"
+  },
+  "elevenLabsVoice": {
+    "title": "Opciones de voz de ElevenLabs",
+    "cost": "STT/TTS en la nube opcional. El audio o texto seleccionado se envía a ElevenLabs. Se aplican cargos de uso, incluidas las muestras. Guardar una clave no cambia los proveedores.",
+    "key": "Clave API de ElevenLabs",
+    "configured": "Clave guardada",
+    "enterKey": "Introduce tu clave API",
+    "save": "Guardar clave",
+    "remove": "Eliminar clave",
+    "storage": "La clave se guarda cifrada en este equipo, nunca en texto plano. Activa los permisos de Speech to Text, Text to Speech y lectura de Voices que necesites.",
+    "stt": "Para STT de ElevenLabs, selecciona Scribe v2 Realtime arriba. Puedes combinar STT local con TTS de ElevenLabs.",
+    "output": "Voz de respuesta (TTS)",
+    "local": "Voz local del sistema · gratis",
+    "cloud": "ElevenLabs · uso de la cuenta",
+    "loading": "Cargando…",
+    "load": "Cargar mis voces",
+    "voice": "Voz",
+    "voiceId": "Voice ID (o elige entre las primeras 100 voces)",
+    "model": "Modelo TTS",
+    "stop": "Detener muestra",
+    "preview": "Escuchar · consume créditos",
+    "tone": "Lectura tranquila y clara, a un ritmo algo más lento. Escucha una voz coreana de tu cuenta antes de elegirla.",
+    "sample": "Hola. Organicemos tus ideas con calma y decidamos qué hacer a continuación.",
+    "keyError": "No se pudo actualizar la clave. Detén el dictado y comprueba el almacenamiento cifrado.",
+    "listError": "No se pudieron cargar las voces. Comprueba la clave, el permiso de lectura de Voices y la conexión.",
+    "previewError": "Falló la muestra. Comprueba el Voice ID, el permiso TTS, la cuota y la conexión.",
+    "flash": "Flash v2.5",
+    "multilingual": "Multilingual v2"
   }
 }

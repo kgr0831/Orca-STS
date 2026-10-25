@@ -5,6 +5,7 @@ import {
   createKeyboardEventTarget,
   createRect,
   createMeasuredElement,
+  installAnimationFrameQueue,
   keyEvent
 } from './pty-connection-test-dom'
 import {
@@ -111,7 +112,7 @@ export function registerPtyConnectionSplitSpawnTests(): void {
       })
       setFitOverride('pty-fit', 'mobile-fit', 49, 20)
 
-      connectPanePty(...mockPanePtyArgs(pane, createManager(1), createDeps()))
+      const binding = connectPanePty(...mockPanePtyArgs(pane, createManager(1), createDeps()))
       const onPtySpawn = createdTransportOptions[0]?.onPtySpawn as
         | ((ptyId: string) => void)
         | undefined
@@ -121,21 +122,12 @@ export function registerPtyConnectionSplitSpawnTests(): void {
       expect(pane.terminal.resize).toHaveBeenCalledWith(49, 20)
       expect(pane.terminal.cols).toBe(49)
       expect(pane.terminal.rows).toBe(20)
+      binding.dispose()
     })
 
     it('continues post-spawn size reconcile after a transient mobile presence lock', async () => {
-      const frameCallbacks: FrameRequestCallback[] = []
-      globalThis.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
-        frameCallbacks.push(callback)
-        return frameCallbacks.length
-      })
-      const runNextFrame = (): void => {
-        const callback = frameCallbacks.shift()
-        if (!callback) {
-          throw new Error('expected a queued animation frame')
-        }
-        callback(0)
-      }
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+      const runNextFrame = installAnimationFrameQueue()
 
       const { connectPanePty } = await import('./pty-connection')
       const { setDriverForPty } = await import('@/lib/pane-manager/mobile-driver-state')
@@ -154,7 +146,7 @@ export function registerPtyConnectionSplitSpawnTests(): void {
         pane.terminal.cols = 80
         pane.terminal.rows = 24
 
-        connectPanePty(...mockPanePtyArgs(pane, createManager(1), createDeps()))
+        const binding = connectPanePty(...mockPanePtyArgs(pane, createManager(1), createDeps()))
         runNextFrame()
         await flushAsyncTicks()
 
@@ -167,6 +159,7 @@ export function registerPtyConnectionSplitSpawnTests(): void {
         runNextFrame()
 
         expect(transport.resize).toHaveBeenCalledWith(120, 40)
+        binding.dispose()
       } finally {
         setDriverForPty(ptyId, { kind: 'idle' })
       }
@@ -191,11 +184,7 @@ export function registerPtyConnectionSplitSpawnTests(): void {
       const pendingCwd = scenario.includes('cwd') ? createDeferred<string>() : null
       const hideWait = scenario.endsWith('hide-wait')
       let measurable = !pendingCwd && scenario !== 'disposed' && !hideWait
-      const frameCallbacks: FrameRequestCallback[] = []
-      globalThis.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
-        frameCallbacks.push(callback)
-        return frameCallbacks.length
-      })
+      const runNextFrame = installAnimationFrameQueue()
       const doc = Object.assign(new EventTarget(), {
         visibilityState: visibility,
         addEventListener: vi.fn(EventTarget.prototype.addEventListener),
@@ -241,7 +230,7 @@ export function registerPtyConnectionSplitSpawnTests(): void {
       const binding = connectPanePty(...args)
 
       if (visibility === 'visible' && scenario !== 'starved') {
-        frameCallbacks.shift()?.(0)
+        runNextFrame()
         const hideListener = doc.addEventListener.mock.calls.at(-1)?.[1]
         if (
           pendingCwd ||
@@ -275,11 +264,11 @@ export function registerPtyConnectionSplitSpawnTests(): void {
         terminalOptions.fontSize = 12
         if (scenario === 'narrow-command') {
           for (let retry = 0; retry < 11; retry += 1) {
-            frameCallbacks.shift()?.(0)
+            runNextFrame()
           }
           expect(transport.connect).not.toHaveBeenCalled()
         }
-        frameCallbacks.shift()?.(0)
+        runNextFrame()
         expect(transport.connect).toHaveBeenCalledTimes(scenario.startsWith('disposed') ? 0 : 1)
       } else {
         vi.advanceTimersByTime(250)
@@ -298,6 +287,7 @@ export function registerPtyConnectionSplitSpawnTests(): void {
             : { cols: 120, rows: 40 }
         )
       )
+      binding.dispose()
     })
 
     it('spawns the delayed primary pane of an issue-command split when its sibling owns the tab PTY fallback', async () => {

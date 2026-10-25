@@ -1,6 +1,30 @@
 import { vi, expect } from 'vitest'
 import type { MockPane } from './pty-connection-test-pane-fixtures'
 
+export function installAnimationFrameQueue(): () => void {
+  const callbacks = new Map<number, FrameRequestCallback>()
+  let nextId = 0
+  let timestamp = 0
+  globalThis.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+    const id = ++nextId
+    callbacks.set(id, callback)
+    return id
+  })
+  globalThis.cancelAnimationFrame = vi.fn((id: number) => {
+    callbacks.delete(id)
+  })
+  return () => {
+    timestamp += 16
+    // A frame runs its pending batch; callbacks scheduled during it belong to the next frame.
+    const pendingIds = [...callbacks.keys()]
+    for (const id of pendingIds) {
+      const callback = callbacks.get(id)
+      callbacks.delete(id)
+      callback?.(timestamp)
+    }
+  }
+}
+
 export async function withMockedDocumentActiveElement<T>(
   activeElement: unknown,
   run: () => Promise<T>
