@@ -52,6 +52,7 @@ import { structuredAgentLabel } from '@/lib/structured-agent-session-launch-labe
 import { useNativeChatStructuredComposerTransport } from './use-native-chat-structured-composer-transport'
 import { NativeChatStructuredGoalStrip } from './NativeChatStructuredGoalStrip'
 import { NativeChatWorkModePicker } from './NativeChatWorkModePicker'
+import { NativeChatVoicePanel } from './NativeChatVoicePanel'
 import { useNativeChatWorkMode } from './use-native-chat-work-mode'
 import { nativeChatPaneHeader } from './NativeChatPaneHeader'
 import { structuredAgentSessionReadFailureNotice } from './structured-agent-session-read-failure-notice'
@@ -395,6 +396,16 @@ export function NativeChatStructuredSession(
           ) : null}
           {prompt ? null : <NativeChatStructuredAsyncQuestion {...asyncQuestion} />}
           {composerShown && <NativeChatInstallSlot slot={install.slot} agentLabel={agentLabel} />}
+          {props.agent === 'codex' ? (
+            <NativeChatVoicePanel
+              active={paneActive}
+              blocked={!composerShown || Boolean(install.unavailableHint) || stopControls.stopping}
+              working={controller.isWorking}
+              messages={controller.messages}
+              transport={workMode.transport}
+              onStopAgent={() => stopControls.composer.onStop?.()}
+            />
+          ) : null}
           {composerShown && props.agent === 'codex' ? (
             <NativeChatWorkModePicker mode={workMode.mode} onChange={workMode.setMode} />
           ) : null}
