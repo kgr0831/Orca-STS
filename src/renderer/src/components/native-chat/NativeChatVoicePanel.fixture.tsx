@@ -1,69 +1,43 @@
-import { useState } from 'react'
 import { defineFixture } from '../../component-fixtures/component-fixture'
-import { getDefaultSettings, getDefaultVoiceSettings } from '../../../../shared/constants'
-import type { VoiceSettings } from '../../../../shared/speech-types'
-import type { NativeChatStructuredComposerTransport } from './native-chat-composer-types'
-import { NativeChatVoicePanel } from './NativeChatVoicePanel'
+import { getDefaultSettings } from '../../../../shared/constants'
+import { NativeChatVoicePanel, type NativeChatVoicePanelProps } from './NativeChatVoicePanel'
 import { NativeChatWorkModePicker } from './NativeChatWorkModePicker'
-import { ElevenLabsVoiceSettings } from '../settings/ElevenLabsVoiceSettings'
-import type { StsWorkModeId } from '../../../../shared/sts-work-modes'
 
-const transport: NativeChatStructuredComposerTransport = {
-  capturePresentation: () => () => true,
-  send: () => false,
-  dispatchCommand: async () => {
-    throw new Error('Fixture has no agent')
-  },
-  optionsSurface: {
-    getSnapshot: () => [],
-    setOption: async () => ({ snapshot: [] }),
-    invokeAction: async () => ({ snapshot: [] }),
-    subscribe: () => () => {}
-  },
-  optionSnapshot: [],
-  onError: () => {},
-  runtime: 'local',
-  sessionId: 'voice-fixture',
-  runtimeEnvironmentId: null
+const props: NativeChatVoicePanelProps = {
+  running: true,
+  listening: false,
+  speaking: true,
+  stateLabel: '답변 읽는 중',
+  startDisabled: false,
+  canInterrupt: true,
+  userCaption: '오른쪽 패널에서 대화하면서 개발 작업도 할 수 있으면 좋겠어.',
+  assistantCaption:
+    '좋아요. 브레인스토밍으로 먼저 흐름을 정리하고, 개발 지시 모드에서 구현을 진행할 수 있어요.',
+  notice: '',
+  setupNeeded: false,
+  retainedDraft: false,
+  canRetry: false,
+  onToggle: () => {},
+  onInterrupt: () => {},
+  onRetry: () => {},
+  onDiscard: () => {}
 }
 
-function Conversation(): React.JSX.Element {
-  const [mode, setMode] = useState<StsWorkModeId>('brainstorm')
-  const [masEnabled, setMasEnabled] = useState(true)
-  const [model, setModel] = useState('auto')
+function Panel(overrides: Partial<NativeChatVoicePanelProps>): React.JSX.Element {
   return (
-    <div className="py-3">
-      <NativeChatVoicePanel
-        active
-        blocked={false}
-        working={false}
-        messages={[
-          {
-            id: 'reply',
-            role: 'assistant',
-            source: 'transcript',
-            timestamp: 1,
-            blocks: [
-              {
-                type: 'text',
-                text: '아이디어를 세 가지 방향으로 나누어 볼게요. 먼저 해결하려는 문제와 가장 중요한 사용자를 정해 볼까요?'
-              }
-            ]
-          }
-        ]}
-        transport={transport}
-        onStopAgent={() => {}}
-      />
+    <div className="bg-sidebar text-sidebar-foreground">
+      <div className="border-b border-border px-3 py-2 text-sm font-medium">음성 대화</div>
+      <NativeChatVoicePanel {...props} {...overrides} />
       <NativeChatWorkModePicker
-        mode={mode}
-        onChange={setMode}
+        mode="brainstorm"
+        onChange={() => {}}
         delegation={{
-          enabled: masEnabled,
-          onEnabledChange: setMasEnabled,
-          model,
-          onModelChange: setModel,
-          models: [{ value: 'gpt-6.1-sol', label: 'GPT-6.1 Sol' }],
-          automaticModel: 'gpt-6.1-sol',
+          enabled: true,
+          onEnabledChange: () => {},
+          model: 'auto',
+          onModelChange: () => {},
+          models: [],
+          automaticModel: null,
           onOpen: () => {}
         }}
       />
@@ -71,39 +45,36 @@ function Conversation(): React.JSX.Element {
   )
 }
 
-function VoiceOptions(): React.JSX.Element {
-  const settings: VoiceSettings = {
-    ...getDefaultVoiceSettings(),
-    elevenLabsApiKeyConfigured: true,
-    ttsProvider: 'elevenlabs',
-    elevenLabsVoiceId: 'preview-voice'
-  }
-  return (
-    <div className="px-4">
-      <ElevenLabsVoiceSettings
-        settings={settings}
-        onUpdate={() => {}}
-        refreshModelStates={() => {}}
-        configureRequest={0}
-      />
-    </div>
+export const speaking = defineFixture({
+  width: 360,
+  store: { settings: { ...getDefaultSettings('/home/fixture'), uiLanguage: 'ko' } },
+  render: () => <Panel />
+})
+export const narrow = defineFixture({ ...speaking, width: 280 })
+export const listening = defineFixture({
+  ...speaking,
+  render: () => (
+    <Panel
+      listening
+      speaking={false}
+      canInterrupt={false}
+      stateLabel="듣는 중"
+      userCaption="그럼 지금 이 프로젝트에서"
+    />
   )
-}
-
-export const koreanConversation = defineFixture({
-  width: 520,
-  store: { settings: { ...getDefaultSettings('/home/fixture'), uiLanguage: 'ko' } },
-  render: () => <Conversation />,
-  interact: (frame) => frame.querySelector<HTMLButtonElement>('button[aria-expanded]')?.click()
 })
-
-export const narrowConversation = defineFixture({
-  ...koreanConversation,
-  width: 360
-})
-
-export const elevenLabs = defineFixture({
-  width: 520,
-  store: { settings: { ...getDefaultSettings('/home/fixture'), uiLanguage: 'ko' } },
-  render: () => <VoiceOptions />
+export const setup = defineFixture({
+  ...narrow,
+  render: () => (
+    <Panel
+      running={false}
+      speaking={false}
+      canInterrupt={false}
+      startDisabled
+      setupNeeded
+      stateLabel="준비됨"
+      userCaption=""
+      assistantCaption=""
+    />
+  )
 })

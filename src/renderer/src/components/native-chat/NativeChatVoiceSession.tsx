@@ -1,0 +1,60 @@
+import { NativeChatVoiceConversation } from './NativeChatVoiceConversation'
+import { NativeChatWorkModePicker } from './NativeChatWorkModePicker'
+import { useNativeChatWorkMode } from './use-native-chat-work-mode'
+import type { useNativeChatInstallSlot } from './NativeChatInstallSlot'
+import type { useStructuredAgentSession } from './use-structured-agent-session'
+import type { nativeChatStructuredStopControls } from './native-chat-structured-stop-controls'
+import type { NativeChatStructuredComposerTransport } from './native-chat-composer-types'
+
+export function NativeChatVoiceSession({
+  controller,
+  transport,
+  stopControls,
+  composerShown,
+  install,
+  hostHeld,
+  isVisible
+}: {
+  controller: Pick<
+    ReturnType<typeof useStructuredAgentSession>,
+    'status' | 'messages' | 'isWorking' | 'latestTurn'
+  >
+  transport: NativeChatStructuredComposerTransport
+  stopControls: ReturnType<typeof nativeChatStructuredStopControls>
+  composerShown: boolean
+  install: ReturnType<typeof useNativeChatInstallSlot>
+  hostHeld: boolean
+  isVisible: boolean
+}): React.JSX.Element {
+  const workMode = useNativeChatWorkMode(transport, true, 'brainstorm')
+  return (
+    <div className="scrollbar-sleek flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+      <NativeChatVoiceConversation
+        active={isVisible}
+        blocked={
+          !composerShown ||
+          Boolean(install.unavailableHint) ||
+          stopControls.stopping ||
+          hostHeld ||
+          controller.status === 'idle' ||
+          controller.status === 'loading' ||
+          controller.status === 'error'
+        }
+        working={controller.isWorking}
+        messages={controller.messages}
+        transport={workMode.transport}
+        completedTurn={
+          controller.latestTurn?.turn.state === 'completed'
+            ? controller.latestTurn.itemId
+            : undefined
+        }
+        onStopAgent={() => stopControls.composer.onStop?.()}
+      />
+      <NativeChatWorkModePicker
+        mode={workMode.mode}
+        onChange={workMode.setMode}
+        delegation={workMode.delegation}
+      />
+    </div>
+  )
+}

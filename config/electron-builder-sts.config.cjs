@@ -1,7 +1,7 @@
 const base = require('./electron-builder.config.cjs')
 const manifest = require('../package.json')
 
-const version = process.env.ORCA_STS_VERSION ?? `${manifest.version}-sts.1`
+const version = process.env.ORCA_STS_VERSION ?? `${manifest.version}-sts.2`
 if (!/^\d+\.\d+\.\d+-sts\.\d+$/.test(version)) {
   throw new Error('Orca-STS versions must use <upstream version>-sts.<number>')
 }

@@ -8,7 +8,8 @@ export function useNativeChatVoicePlayback(
   messages: readonly NativeChatMessage[],
   working: boolean,
   enabled: boolean,
-  settings?: VoiceSettings
+  settings?: VoiceSettings,
+  paused = false
 ) {
   const [voice, setVoice] = useState<SpeechSynthesisVoice>()
   const [speaking, setSpeaking] = useState(false)
@@ -70,7 +71,7 @@ export function useNativeChatVoicePlayback(
   }, [enabled, cloud, voiceId, modelId, available, stop])
 
   useEffect(() => {
-    if (!enabled || !available || error || current.current) {
+    if (!enabled || paused || !available || error || current.current) {
       return
     }
     const next = playback.current.next(messages, working)
@@ -109,6 +110,7 @@ export function useNativeChatVoicePlayback(
     }
   }, [
     enabled,
+    paused,
     available,
     cloud,
     error,
@@ -122,5 +124,9 @@ export function useNativeChatVoicePlayback(
   ])
 
   const pending = enabled && available && !error && playback.current.hasPending(messages, working)
-  return { speaking, pending, caption, available, error, stop }
+  const restart = () => {
+    stop()
+    setError(false)
+  }
+  return { speaking, pending, caption, available, error, stop, restart }
 }

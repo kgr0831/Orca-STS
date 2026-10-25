@@ -4,9 +4,10 @@ import type { NativeChatStructuredComposerTransport } from './native-chat-compos
 
 export function useNativeChatWorkMode(
   transport: NativeChatStructuredComposerTransport,
-  enabled: boolean
+  enabled: boolean,
+  initialMode: StsWorkModeId = 'default'
 ) {
-  const [mode, setMode] = useState<StsWorkModeId>('default')
+  const [mode, setMode] = useState<StsWorkModeId>(initialMode)
   const [delegationEnabled, setDelegationEnabled] = useState(true)
   const [model, setModel] = useState('auto')
   const modelOption = transport.optionSnapshot.find((option) => option.category === 'model')

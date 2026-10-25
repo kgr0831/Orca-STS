@@ -100,7 +100,7 @@ export function NativeChatWorkModePicker(props: {
   const choices = workModeChoices()
   const selected = choices.find((choice) => choice.id === props.mode)
   return (
-    <div className="mx-3 mb-2 space-y-2 rounded-md border border-border bg-card p-3 text-card-foreground">
+    <div className="space-y-2 border-t border-border bg-card p-3 text-card-foreground">
       <div className="flex flex-wrap items-center gap-2">
         <Label htmlFor={id}>{translate('stsWorkModes.label', 'Work mode')}</Label>
         <Select
@@ -130,7 +130,12 @@ export function NativeChatWorkModePicker(props: {
         {selected?.description}
       </p>
       {props.mode !== 'default' && props.delegation ? (
-        <NativeChatDelegationOptions {...props.delegation} />
+        <details className="text-xs">
+          <summary className="cursor-pointer py-1 text-muted-foreground">
+            {translate('stsLive.specialists', 'Specialist model settings (MAS)')}
+          </summary>
+          <NativeChatDelegationOptions {...props.delegation} />
+        </details>
       ) : null}
     </div>
   )

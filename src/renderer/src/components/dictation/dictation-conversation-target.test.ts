@@ -8,6 +8,28 @@ import {
 import { captureInsertionTarget, insertText } from './dictation-insertion-target'
 
 describe('conversation dictation targets', () => {
+  it('routes explicit sidebar capture independently of focus and never falls back after closure', () => {
+    const terminal = document.createElement('textarea')
+    const sidebar = document.createElement('textarea')
+    document.body.append(terminal, sidebar)
+    terminal.focus()
+    const callbacks = { onPartial: vi.fn(), onFinal: vi.fn(), onStopped: vi.fn(), onError: vi.fn() }
+    const unregister = registerDictationConversationTarget(sidebar, callbacks)
+    const captured = captureInsertionTarget(sidebar)
+    expect(captured?.kind).toBe('conversation')
+    if (!captured) {
+      throw new Error('Missing sidebar capture')
+    }
+    insertText('sidebar only', captured)
+    expect(callbacks.onFinal).toHaveBeenCalledWith('sidebar only')
+    expect(terminal.value).toBe('')
+    expect(document.activeElement).toBe(terminal)
+    unregister()
+    expect(captureInsertionTarget(sidebar)).toBeNull()
+    sidebar.remove()
+    expect(captureInsertionTarget(sidebar)).toBeNull()
+    terminal.remove()
+  })
   it('keeps ordinary dictation available when the panel has not started capture', () => {
     const element = document.createElement('textarea')
     document.body.appendChild(element)

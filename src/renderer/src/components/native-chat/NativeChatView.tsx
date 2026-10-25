@@ -7,11 +7,24 @@ import { NativeChatPaneFileDropSurface } from './NativeChatPaneFileDropSurface'
 import { NativeChatVisualOwnerProvider } from './native-chat-visual-owner'
 import { NativeChatFileLinkExistenceProvider } from './use-native-chat-file-link-existence'
 import { NativeChatMarkdownImageOwnerProvider } from './native-chat-markdown-image-owner'
+import { useVoiceSidebarSessions } from '@/store/voice-sidebar-state'
+import { translate } from '@/i18n/i18n'
 
 export type { NativeChatViewProps } from './native-chat-view-types'
 
 /** Resolves an agent terminal into its native conversation and composer UI. */
 export default function NativeChatView(props: NativeChatViewProps): React.JSX.Element {
+  const voiceTabId = useVoiceSidebarSessions((s) => s.mountedTabId)
+  if (props.mode === 'structured' && !props.presentation && props.tabId === voiceTabId) {
+    return (
+      <div className="p-4 text-sm text-muted-foreground">
+        {translate(
+          'stsLive.inSidebar',
+          'This conversation is open in the voice sidebar. Close the sidebar to view its full chat here.'
+        )}
+      </div>
+    )
+  }
   return (
     <NativeChatPaneFileDropSurface className="relative flex h-full min-h-0 min-w-0 w-full">
       {props.mode === 'structured' ? (

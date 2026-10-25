@@ -131,7 +131,8 @@ export function connectPanePty(
   // exists. Start with the shared scheduler, then switch to the PTY writer
   // so hidden-tab resets keep backlog-recovery callbacks and byte order.
   session.queueAgentIdleTerminalModeReset = (): void => {
-    if (session.disposed) {
+    // A cosmetic reset must never terminate a split application escape sequence.
+    if (session.disposed || session.transport?.getPendingEscapeTailAnsi?.()) {
       return
     }
     writeTerminalOutput(session.pane.terminal, RESET_TERMINAL_CURSOR_STYLE, {

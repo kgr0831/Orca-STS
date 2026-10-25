@@ -1,4 +1,26 @@
 {
+  "stsLive": {
+    "start": "Start voice conversation",
+    "end": "End voice conversation",
+    "interrupt": "Interrupt and speak",
+    "interrupting": "Stopping the reply…",
+    "waiting": "Waiting for the chat to be ready",
+    "reconnecting": "Listening again shortly…",
+    "hint": "Speak naturally. Replies play aloud, then listening resumes.",
+    "setup": "Set up speech recognition and a playback voice in Voice settings to begin.",
+    "captions": "Conversation captions",
+    "yourCaption": "Your words appear here as you speak.",
+    "answerCaption": "Voice replies and captions appear here.",
+    "retryDraft": "Send retained words",
+    "discardDraft": "Discard",
+    "audioFailed": "Audio failed. Check Voice settings, then start again.",
+    "chooseWorkspace": "Select a workspace with a connected Codex host.",
+    "opening": "Preparing your voice conversation…",
+    "sessionClosed": "The voice chat is unavailable. Open a new conversation to continue.",
+    "newConversation": "New voice conversation",
+    "inSidebar": "This conversation is open in the voice sidebar. Close the sidebar to view its full chat here.",
+    "specialists": "Specialist model settings (MAS)"
+  },
   "stsVoice": {
     "close": "Close voice conversation",
     "open": "Voice conversation",

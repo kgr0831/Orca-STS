@@ -132,7 +132,8 @@ export function bindWritePtyOutputToXterm(session: ConnectPanePtySession): void 
   }
 
   session.queueAgentIdleTerminalModeReset = (): void => {
-    if (session.disposed) {
+    // A cosmetic reset must never terminate a split application escape sequence.
+    if (session.disposed || session.transport.getPendingEscapeTailAnsi?.()) {
       return
     }
     session.writePtyOutputToXterm(

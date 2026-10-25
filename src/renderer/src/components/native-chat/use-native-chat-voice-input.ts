@@ -113,15 +113,14 @@ export function useNativeChatVoiceInput(args: {
       return false
     }
     latest.current.onBeforeStart()
-    element.focus()
-    if (document.activeElement !== element) {
+    if (!element.isConnected) {
       return false
     }
     owns.current = true
     cancelled.current = false
     setOwned(true)
     setError('')
-    dispatchDictationControl('start')
+    dispatchDictationControl('start', element)
     return true
   }, [ready])
 

@@ -3478,6 +3478,19 @@
     "finishEditing": "Save or cancel the preset to continue creating your workspace.",
     "pathHelp": "One repository-relative directory per line. Spaces within a path are preserved."
   },
+  "stsVoice": {
+    "automatic": "Send after a pause and listen again after the reply",
+    "close": "Close voice conversation",
+    "finish": "Finish speaking",
+    "noVoice": "Set up the selected voice in Settings → Voice. Captions remain available.",
+    "pause": "Pause conversation",
+    "read": "Read replies aloud",
+    "send": "Send text",
+    "setup": "Enable voice input and select Korean streaming or ElevenLabs Scribe in Settings → Voice.",
+    "speechError": "Audio playback failed. Turn Read replies aloud off and on to retry.",
+    "start": "Start speaking",
+    "stopAgent": "Stop Codex"
+  },
   "terminal": {
     "newerDaemonBanner": {
       "reopenTerminal_one": "Reopen terminal",

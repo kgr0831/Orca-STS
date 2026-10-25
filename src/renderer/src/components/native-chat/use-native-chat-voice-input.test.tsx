@@ -43,7 +43,7 @@ function setup() {
   }
   const control = (event: Event) => {
     if (event instanceof CustomEvent) {
-      store.dictationState = event.detail === 'start' ? 'listening' : 'stopping'
+      store.dictationState = event.detail?.action === 'start' ? 'listening' : 'stopping'
     }
   }
   document.addEventListener(DICTATION_CONTROL_EVENT, control)
@@ -60,6 +60,17 @@ function setup() {
 }
 
 describe('voice capture ownership', () => {
+  it('starts in the sidebar without moving focus away from the terminal', () => {
+    const { result, unmount } = setup()
+    const terminal = document.createElement('textarea')
+    document.body.appendChild(terminal)
+    terminal.focus()
+    act(() => {
+      expect(result.current.start()).toBe(true)
+    })
+    expect(document.activeElement).toBe(terminal)
+    unmount()
+  })
   it('shows partial text and waits for the stopped fence before sending final text', () => {
     const { result, target, onReady, beforeStart, unmount } = setup()
     act(() => {

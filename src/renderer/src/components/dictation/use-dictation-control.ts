@@ -10,7 +10,7 @@ export function useDictationControl({
 }: {
   enabled: boolean
   state: RefObject<DictationState>
-  start: () => Promise<void>
+  start: (conversationTarget?: Element) => Promise<void>
   stop: () => Promise<void>
 }): void {
   useEffect(() => {
@@ -19,6 +19,18 @@ export function useDictationControl({
         return
       }
       const action: unknown = event.detail
+      if (typeof action === 'object' && action !== null) {
+        if (
+          'action' in action &&
+          action.action === 'start' &&
+          'conversationTarget' in action &&
+          action.conversationTarget instanceof Element &&
+          state.current === 'idle'
+        ) {
+          void start(action.conversationTarget)
+        }
+        return
+      }
       const recording = state.current === 'listening' || state.current === 'starting'
       if ((action === 'start' || action === 'toggle') && state.current === 'idle') {
         void start()

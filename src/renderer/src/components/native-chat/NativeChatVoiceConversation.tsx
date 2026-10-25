@@ -1,8 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { useEffect, useRef, useState } from 'react'
 import { translate } from '@/i18n/i18n'
 import { useAppStore } from '@/store'
 import type { NativeChatMessage } from '../../../../shared/native-chat-types'
@@ -11,12 +7,14 @@ import type { NativeChatStructuredComposerTransport } from './native-chat-compos
 import { completeNativeChatStructuredUserAction } from './native-chat-structured-user-action'
 import { useNativeChatVoiceInput } from './use-native-chat-voice-input'
 import { useNativeChatVoicePlayback } from './use-native-chat-voice-playback'
+import { NativeChatVoicePanel } from './NativeChatVoicePanel'
 
 export type NativeChatVoiceConversationProps = {
   active: boolean
   blocked: boolean
   working: boolean
   messages: readonly NativeChatMessage[]
+  completedTurn?: string
   transport: NativeChatStructuredComposerTransport
   onStopAgent: () => void
 }
@@ -24,30 +22,38 @@ export type NativeChatVoiceConversationProps = {
 export function NativeChatVoiceConversation(
   props: NativeChatVoiceConversationProps
 ): React.JSX.Element {
-  const id = useId()
-  const [automatic, setAutomatic] = useState(true)
-  const [readAloud, setReadAloud] = useState(true)
-  const [muted, setMuted] = useState(false)
+  const [running, setRunning] = useState(false)
   const [sending, setSending] = useState(false)
   const [awaiting, setAwaiting] = useState(false)
+  const [interrupting, setInterrupting] = useState(false)
   const [notice, setNotice] = useState('')
   const [lastSent, setLastSent] = useState('')
   const workSeen = useRef(false)
   const sendInFlight = useRef(false)
   const conversationRun = useRef(0)
   const mounted = useRef(true)
+  const replyBaseline = useRef('')
+  const turnBaseline = useRef<string | undefined>(undefined)
+  const latestAnswer = props.messages.findLast((message) => voiceMessageText(message).trim())
+  const answer = latestAnswer ? voiceMessageText(latestAnswer) : ''
+  const replyRevision = latestAnswer ? `${latestAnswer.id}:${answer}` : ''
   const dictationState = useAppStore((store) => store.dictationState)
   const voiceSettings = useAppStore((store) => store.settings?.voice)
   const playback = useNativeChatVoicePlayback(
     props.messages,
     props.working,
-    props.active && !props.blocked && readAloud && !muted && dictationState === 'idle',
-    voiceSettings
+    props.active && running,
+    voiceSettings,
+    dictationState !== 'idle' || interrupting
   )
   const input = useNativeChatVoiceInput({
     active: props.active && !props.blocked,
-    autoSend: automatic,
-    onReady: (text) => send(text),
+    autoSend: true,
+    onReady: (text) => {
+      if (running) {
+        send(text)
+      }
+    },
     onBeforeStart: () => {
       playback.stop()
       setNotice('')
@@ -65,8 +71,13 @@ export function NativeChatVoiceConversation(
     !props.transport.sendBlockedReason &&
     !props.transport.sessionPending
 
-  function notSentNotice(): string {
-    return translate('stsVoice.notSent', 'Not sent. Keep the text and send when the chat is ready.')
+  function end(): void {
+    conversationRun.current += 1
+    setRunning(false)
+    setAwaiting(false)
+    setInterrupting(false)
+    stopPlayback()
+    cancelInput()
   }
 
   function send(text: string): void {
@@ -74,59 +85,63 @@ export function NativeChatVoiceConversation(
       return
     }
     if (!canSend) {
-      setNotice(notSentNotice())
+      setNotice(
+        translate('stsVoice.notSent', 'Not sent. Keep the text and send when the chat is ready.')
+      )
+      end()
       return
     }
     sendInFlight.current = true
     setSending(true)
     setNotice('')
-    setMuted(false)
     workSeen.current = false
+    replyBaseline.current = replyRevision
+    turnBaseline.current = props.completedTurn
     const run = ++conversationRun.current
-    let result: boolean | 'queued'
+    const failed = (unconfirmed: boolean) => {
+      sendInFlight.current = false
+      if (!mounted.current) {
+        return
+      }
+      setSending(false)
+      end()
+      setNotice(
+        unconfirmed
+          ? translate(
+              'stsVoice.unconfirmed',
+              'Delivery is unconfirmed. Check the chat before sending again.'
+            )
+          : translate(
+              'stsVoice.notSent',
+              'Not sent. Keep the text and send when the chat is ready.'
+            )
+      )
+    }
     try {
-      result = props.transport.send(text, [], {
+      const result = props.transport.send(text, [], {
         callerKeepsText: true,
         onSettled: (outcome) => {
+          if (outcome !== 'recorded') {
+            failed(outcome === 'unconfirmed')
+            return
+          }
           sendInFlight.current = false
           if (!mounted.current) {
             return
           }
           setSending(false)
-          if (outcome === 'recorded') {
-            setLastSent(text)
-            input.setDraft('')
-            setAwaiting(run === conversationRun.current)
-          } else {
-            setAwaiting(false)
-            setNotice(
-              outcome === 'unconfirmed'
-                ? translate(
-                    'stsVoice.unconfirmed',
-                    'Delivery is unconfirmed. Check the chat before sending again.'
-                  )
-                : notSentNotice()
-            )
-          }
+          setLastSent(text)
+          input.setDraft('')
+          setAwaiting(run === conversationRun.current)
         }
       })
+      if (result === false) {
+        failed(false)
+      } else {
+        completeNativeChatStructuredUserAction('codex', props.transport, result === true)
+      }
     } catch {
-      sendInFlight.current = false
-      setSending(false)
-      setNotice(
-        translate(
-          'stsVoice.unconfirmed',
-          'Delivery is unconfirmed. Check the chat before sending again.'
-        )
-      )
-      return
-    }
-    if (result === false) {
-      sendInFlight.current = false
-      setSending(false)
-      setNotice(notSentNotice())
-    } else {
-      completeNativeChatStructuredUserAction('codex', props.transport, result === true)
+      failed(true)
     }
   }
 
@@ -134,28 +149,20 @@ export function NativeChatVoiceConversation(
     mounted.current = true
     return () => {
       mounted.current = false
+      conversationRun.current += 1
     }
   }, [])
-
   useEffect(() => {
     if (props.working && (awaiting || sending)) {
       workSeen.current = true
     }
   }, [props.working, awaiting, sending])
-
-  useEffect(() => {
-    if (!props.active || props.blocked) {
-      conversationRun.current += 1
-      // oxlint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- Losing microphone ownership must cancel the next automatic turn.
-      setAwaiting(false)
-    }
-  }, [props.active, props.blocked])
-
   useEffect(() => {
     const pause = () => {
       conversationRun.current += 1
-      setMuted(true)
+      setRunning(false)
       setAwaiting(false)
+      setInterrupting(false)
       stopPlayback()
       cancelInput()
     }
@@ -171,200 +178,161 @@ export function NativeChatVoiceConversation(
       document.removeEventListener('visibilitychange', visibilityChanged)
     }
   }, [cancelInput, stopPlayback])
-
   useEffect(() => {
-    if (
-      !automatic ||
+    if (!props.active || input.error || playback.error || (running && !playback.available)) {
+      conversationRun.current += 1
+      // oxlint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- External audio failure must release capture and cancel automatic turns.
+      setRunning(false)
+      setAwaiting(false)
+      stopPlayback()
+      cancelInput()
+    }
+  }, [
+    props.active,
+    input.error,
+    playback.error,
+    playback.available,
+    running,
+    stopPlayback,
+    cancelInput
+  ])
+  useEffect(() => {
+    const replyFinished =
       !awaiting ||
-      !workSeen.current ||
+      workSeen.current ||
+      replyRevision !== replyBaseline.current ||
+      (props.completedTurn !== undefined && props.completedTurn !== turnBaseline.current)
+    if (
+      !running ||
+      !replyFinished ||
       !canSend ||
       input.draft ||
       !input.ready ||
       input.error ||
+      input.owned ||
       input.state !== 'idle' ||
       playback.speaking ||
-      playback.pending
+      (!interrupting && playback.pending) ||
+      playback.error ||
+      !playback.available
     ) {
       return
     }
     const timer = setTimeout(() => {
       setAwaiting(false)
+      setInterrupting(false)
       startInput()
     }, 500)
     return () => clearTimeout(timer)
   }, [
-    automatic,
+    running,
     awaiting,
+    interrupting,
     canSend,
+    replyRevision,
+    props.completedTurn,
     input.draft,
-    input.error,
     input.ready,
-    startInput,
+    input.error,
+    input.owned,
     input.state,
+    startInput,
     playback.speaking,
-    playback.pending
+    playback.pending,
+    playback.error,
+    playback.available
   ])
 
-  const latestAnswer = props.messages.findLast((message) => voiceMessageText(message).trim())
-  const caption = playback.speaking
-    ? playback.caption
-    : latestAnswer
-      ? voiceMessageText(latestAnswer)
-      : ''
-  const stateLabel = input.owned
-    ? input.state === 'starting'
-      ? translate('stsVoice.starting', 'Starting microphone…')
-      : input.state === 'stopping'
-        ? translate('stsVoice.processing', 'Finishing recognition…')
-        : translate('stsVoice.listening', 'Listening')
-    : sending
-      ? translate('stsVoice.sending', 'Sending…')
-      : playback.speaking
-        ? translate('stsVoice.speaking', 'Reading response')
-        : props.working
-          ? translate('stsVoice.working', 'Codex is working')
-          : translate('stsVoice.ready', 'Ready')
-
+  const stateLabel = interrupting
+    ? translate('stsLive.interrupting', 'Stopping the reply…')
+    : input.owned
+      ? input.state === 'starting'
+        ? translate('stsVoice.starting', 'Starting microphone…')
+        : input.state === 'stopping'
+          ? translate('stsVoice.processing', 'Finishing recognition…')
+          : translate('stsVoice.listening', 'Listening')
+      : sending
+        ? translate('stsVoice.sending', 'Sending…')
+        : playback.speaking
+          ? translate('stsVoice.speaking', 'Reading response')
+          : props.blocked
+            ? translate('stsLive.waiting', 'Waiting for the chat to be ready')
+            : props.working || awaiting
+              ? translate('stsVoice.working', 'Codex is working')
+              : running
+                ? translate('stsLive.reconnecting', 'Listening again shortly…')
+                : translate('stsVoice.ready', 'Ready')
   return (
-    <div className="mt-3 space-y-3">
-      <p role="status" className="text-xs text-muted-foreground">
-        {stateLabel}
-      </p>
-      {!input.ready ? (
-        <div className="space-y-2">
-          <p className="text-sm">
-            {translate(
-              'stsVoice.setup',
-              'Enable voice input and select Korean streaming or ElevenLabs Scribe in Settings → Voice.'
-            )}
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              useAppStore.getState().openSettingsTarget({ pane: 'voice', repoId: null })
-              useAppStore.getState().openSettingsPage()
-            }}
-          >
-            {translate('stsVoice.settings', 'Voice settings')}
-          </Button>
-        </div>
-      ) : null}
-      <div className="flex flex-wrap gap-3">
-        <Label htmlFor={`${id}-auto`}>
-          <Checkbox
-            id={`${id}-auto`}
-            checked={automatic}
-            onCheckedChange={(value) => setAutomatic(value === true)}
-          />
-          {translate('stsVoice.automatic', 'Send after a pause and listen again after the reply')}
-        </Label>
-        <Label htmlFor={`${id}-read`}>
-          <Checkbox
-            id={`${id}-read`}
-            checked={readAloud}
-            onCheckedChange={(value) => setReadAloud(value === true)}
-          />
-          {translate('stsVoice.read', 'Read replies aloud')}
-        </Label>
-      </div>
-      {readAloud && !playback.available ? (
-        <p className="text-xs text-muted-foreground">
-          {translate(
-            'stsVoice.noVoice',
-            'Set up the selected voice in Settings → Voice. Captions remain available.'
-          )}
-        </p>
-      ) : null}
-      {playback.error ? (
-        <p role="alert" className="text-sm">
-          {translate(
-            'stsVoice.speechError',
-            'Audio playback failed. Turn Read replies aloud off and on to retry.'
-          )}
-        </p>
-      ) : null}
-      <Label htmlFor={`${id}-draft`}>{translate('stsVoice.you', 'You')}</Label>
-      <Textarea
-        id={`${id}-draft`}
+    <>
+      <textarea
         ref={input.inputRef}
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        readOnly
         value={input.draft}
-        readOnly={input.owned || sending}
-        onChange={(event) => input.setDraft(event.target.value)}
-        rows={2}
       />
-      {input.partial ? <p className="text-sm text-muted-foreground">{input.partial}</p> : null}
-      {!input.draft && lastSent ? (
-        <p className="text-xs text-muted-foreground">{lastSent}</p>
-      ) : null}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          size="sm"
-          disabled={!input.owned && (!canSend || !input.ready || input.state !== 'idle')}
-          onClick={() => (input.owned ? input.stop() : input.start())}
-        >
-          {input.owned
-            ? translate('stsVoice.finish', 'Finish speaking')
-            : translate('stsVoice.start', 'Start speaking')}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={!canSend || input.owned || !input.draft.trim()}
-          onClick={() => send(input.draft)}
-        >
-          {translate('stsVoice.send', 'Send text')}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={!playback.speaking && !awaiting && !input.owned && !sending}
-          onClick={() => {
-            conversationRun.current += 1
-            setMuted(true)
-            setAwaiting(false)
-            playback.stop()
-            input.cancel()
-          }}
-        >
-          {translate('stsVoice.pause', 'Pause conversation')}
-        </Button>
-        {props.working ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              conversationRun.current += 1
-              setAwaiting(false)
-              setMuted(true)
-              playback.stop()
+      <NativeChatVoicePanel
+        running={running}
+        listening={input.owned}
+        speaking={playback.speaking}
+        stateLabel={stateLabel}
+        startDisabled={
+          !canSend ||
+          !input.ready ||
+          !playback.available ||
+          input.state !== 'idle' ||
+          Boolean(input.draft)
+        }
+        canInterrupt={
+          running && !sending && !interrupting && (props.working || playback.speaking || awaiting)
+        }
+        userCaption={[input.draft || (input.owned ? '' : lastSent), input.partial]
+          .filter(Boolean)
+          .join(' ')}
+        assistantCaption={playback.speaking ? playback.caption : answer}
+        notice={
+          notice ||
+          input.error ||
+          (playback.error
+            ? translate(
+                'stsLive.audioFailed',
+                'Audio failed. Check Voice settings, then start again.'
+              )
+            : '')
+        }
+        setupNeeded={!input.ready || !playback.available}
+        retainedDraft={!running && Boolean(input.draft)}
+        canRetry={canSend && input.state === 'idle'}
+        onRetry={() => send(input.draft)}
+        onDiscard={() => {
+          input.setDraft('')
+          setNotice('')
+        }}
+        onToggle={() => {
+          if (running) {
+            end()
+            if (props.working) {
               props.onStopAgent()
-            }}
-          >
-            {translate('stsVoice.stopAgent', 'Stop Codex')}
-          </Button>
-        ) : null}
-      </div>
-      {notice || input.error ? (
-        <p role="alert" className="text-sm">
-          {notice || input.error}
-        </p>
-      ) : null}
-      {caption ? (
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">
-            {translate('stsVoice.assistant', 'Codex')}
-          </p>
-          <p className="scrollbar-sleek max-h-32 overflow-y-auto whitespace-pre-wrap text-sm">
-            {caption}
-          </p>
-        </div>
-      ) : null}
-    </div>
+            }
+            return
+          }
+          playback.restart()
+          setNotice('')
+          setRunning(true)
+          setAwaiting(false)
+          startInput()
+        }}
+        onInterrupt={() => {
+          conversationRun.current += 1
+          setAwaiting(false)
+          setInterrupting(true)
+          stopPlayback()
+          if (props.working) {
+            props.onStopAgent()
+          }
+        }}
+      />
+    </>
   )
 }
