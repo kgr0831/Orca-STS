@@ -95,171 +95,177 @@ export function DictationController() {
     [setDictationState, setPartialTranscript, stopCapture, getCapturedChunkCount]
   )
 
-  const startDictation = useCallback(async () => {
-    if (dictationStateRef.current !== 'idle') {
-      return
-    }
+  const startDictation = useCallback(
+    async (conversationElement?: Element) => {
+      if (dictationStateRef.current !== 'idle') {
+        return
+      }
 
-    const modelId = settings?.voice?.sttModel
-    if (!modelId) {
-      toast('No speech model selected. Download one in Settings > Voice.', {
-        action: {
-          label: translate(
-            'auto.components.dictation.DictationController.bb7f599ee7',
-            'Open Settings'
-          ),
-          onClick: () => {
-            useAppStore.getState().openSettingsTarget({ pane: 'voice', repoId: null })
-            useAppStore.getState().openSettingsPage()
+      const modelId = settings?.voice?.sttModel
+      if (!modelId) {
+        toast('No speech model selected. Download one in Settings > Voice.', {
+          action: {
+            label: translate(
+              'auto.components.dictation.DictationController.bb7f599ee7',
+              'Open Settings'
+            ),
+            onClick: () => {
+              useAppStore.getState().openSettingsTarget({ pane: 'voice', repoId: null })
+              useAppStore.getState().openSettingsPage()
+            }
           }
-        }
-      })
-      return
-    }
-
-    if (!settings?.voice?.enabled) {
-      toast('Voice dictation is disabled. Enable it in Settings > Voice.')
-      return
-    }
-
-    const runId = dictationRunRef.current + 1
-    const sessionId = String(runId)
-    dictationRunRef.current = runId
-    activeSessionIdRef.current = sessionId
-    insertionTargetRef.current = captureInsertionTarget()
-    stopRequestedDuringStartRef.current = false
-    finalTranscriptReceivedRef.current = false
-    erroredSessionIdsRef.current.clear()
-    insertedFinalTranscriptRef.current = ''
-    intentionalTargetCancellationRef.current = false
-    dictationStateRef.current = 'starting'
-    setDictationState('starting')
-
-    let captureStarted = false
-
-    try {
-      // Why: worker startup can take seconds after idle teardown. Capture first
-      // and buffer locally so speech during "Starting..." is not discarded.
-      const preferredMicrophoneDeviceId = settings?.voice?.microphoneDeviceId ?? null
-      const captureResult = await startCapture({
-        bufferAudio: true,
-        sessionId,
-        microphoneDeviceId: preferredMicrophoneDeviceId,
-        microphoneDeviceLabel: settings?.voice?.microphoneDeviceLabel ?? null,
-        onCaptureLost: () => {
-          if (dictationRunRef.current !== runId) {
-            return
-          }
-          toast.message(
-            translate(
-              'auto.components.dictation.DictationController.micDisconnected',
-              'Microphone disconnected. Dictation stopped.'
-            )
-          )
-          stopDictationRef.current?.()
-        }
-      })
-      captureStarted = true
-      if (captureResult?.fellBackToDefaultMicrophone) {
-        // Why: a stop requested during startup tears this capture down below, so the
-        // notice would describe a fallback that never records anything.
-        if (
-          !stopRequestedDuringStartRef.current &&
-          micFallbackNotifiedForRef.current !== preferredMicrophoneDeviceId
-        ) {
-          micFallbackNotifiedForRef.current = preferredMicrophoneDeviceId
-          toast.message(
-            translate(
-              'auto.components.dictation.DictationController.micFallback',
-              'Selected microphone unavailable. Using system default.'
-            )
-          )
-        }
-      } else {
-        micFallbackNotifiedForRef.current = null
-      }
-      if (stopRequestedDuringStartRef.current) {
-        stopCapture({ preserveBufferedAudio: true })
-      }
-      if (dictationRunRef.current !== runId) {
-        discardBufferedAudio()
-        stopCapture()
-        insertionTargetRef.current = null
+        })
         return
       }
 
-      await window.api.speech.startDictation(modelId, undefined, sessionId)
-      if (dictationRunRef.current !== runId) {
-        discardBufferedAudio()
-        insertionTargetRef.current = null
-        stopCapture()
-        await window.api.speech.stopDictation(sessionId).catch(() => undefined)
-        drainStoppedSession(sessionId)
+      if (!settings?.voice?.enabled) {
+        toast('Voice dictation is disabled. Enable it in Settings > Voice.')
         return
       }
 
-      await flushBufferedAudio()
-      if (dictationRunRef.current !== runId) {
-        discardBufferedAudio()
-        insertionTargetRef.current = null
-        stopCapture()
-        await window.api.speech.stopDictation(sessionId).catch(() => undefined)
-        drainStoppedSession(sessionId)
+      const runId = dictationRunRef.current + 1
+      const sessionId = String(runId)
+      dictationRunRef.current = runId
+      activeSessionIdRef.current = sessionId
+      insertionTargetRef.current = captureInsertionTarget(conversationElement)
+      if (conversationElement && !insertionTargetRef.current) {
         return
       }
-      if (stopRequestedDuringStartRef.current) {
-        await finishDictationSession(sessionId)
-        return
-      }
-
-      dictationStateRef.current = 'listening'
-      setDictationState('listening')
-      recordFeatureInteraction('voice-dictation')
-    } catch (err) {
-      if (dictationRunRef.current !== runId) {
-        return
-      }
-      await window.api.speech.stopDictation(sessionId).catch(() => undefined)
-      drainStoppedSession(sessionId)
-      if (captureStarted) {
-        stopCapture()
-      }
-      discardBufferedAudio()
-      const message = String(err)
-      if (insertionTargetRef.current?.kind === 'conversation') {
-        insertionTargetRef.current.target.onError(message)
-      }
-      insertionTargetRef.current = null
-      intentionalTargetCancellationRef.current = false
       stopRequestedDuringStartRef.current = false
       finalTranscriptReceivedRef.current = false
       erroredSessionIdsRef.current.clear()
       insertedFinalTranscriptRef.current = ''
-      activeSessionIdRef.current = null
-      setPartialTranscript('')
-      if (message.includes('dictation_canceled')) {
+      intentionalTargetCancellationRef.current = false
+      dictationStateRef.current = 'starting'
+      setDictationState('starting')
+
+      let captureStarted = false
+
+      try {
+        // Why: worker startup can take seconds after idle teardown. Capture first
+        // and buffer locally so speech during "Starting..." is not discarded.
+        const preferredMicrophoneDeviceId = settings?.voice?.microphoneDeviceId ?? null
+        const captureResult = await startCapture({
+          bufferAudio: true,
+          sessionId,
+          microphoneDeviceId: preferredMicrophoneDeviceId,
+          microphoneDeviceLabel: settings?.voice?.microphoneDeviceLabel ?? null,
+          onCaptureLost: () => {
+            if (dictationRunRef.current !== runId) {
+              return
+            }
+            toast.message(
+              translate(
+                'auto.components.dictation.DictationController.micDisconnected',
+                'Microphone disconnected. Dictation stopped.'
+              )
+            )
+            stopDictationRef.current?.()
+          }
+        })
+        captureStarted = true
+        if (captureResult?.fellBackToDefaultMicrophone) {
+          // Why: a stop requested during startup tears this capture down below, so the
+          // notice would describe a fallback that never records anything.
+          if (
+            !stopRequestedDuringStartRef.current &&
+            micFallbackNotifiedForRef.current !== preferredMicrophoneDeviceId
+          ) {
+            micFallbackNotifiedForRef.current = preferredMicrophoneDeviceId
+            toast.message(
+              translate(
+                'auto.components.dictation.DictationController.micFallback',
+                'Selected microphone unavailable. Using system default.'
+              )
+            )
+          }
+        } else {
+          micFallbackNotifiedForRef.current = null
+        }
+        if (stopRequestedDuringStartRef.current) {
+          stopCapture({ preserveBufferedAudio: true })
+        }
+        if (dictationRunRef.current !== runId) {
+          discardBufferedAudio()
+          stopCapture()
+          insertionTargetRef.current = null
+          return
+        }
+
+        await window.api.speech.startDictation(modelId, undefined, sessionId)
+        if (dictationRunRef.current !== runId) {
+          discardBufferedAudio()
+          insertionTargetRef.current = null
+          stopCapture()
+          await window.api.speech.stopDictation(sessionId).catch(() => undefined)
+          drainStoppedSession(sessionId)
+          return
+        }
+
+        await flushBufferedAudio()
+        if (dictationRunRef.current !== runId) {
+          discardBufferedAudio()
+          insertionTargetRef.current = null
+          stopCapture()
+          await window.api.speech.stopDictation(sessionId).catch(() => undefined)
+          drainStoppedSession(sessionId)
+          return
+        }
+        if (stopRequestedDuringStartRef.current) {
+          await finishDictationSession(sessionId)
+          return
+        }
+
+        dictationStateRef.current = 'listening'
+        setDictationState('listening')
+        recordFeatureInteraction('voice-dictation')
+      } catch (err) {
+        if (dictationRunRef.current !== runId) {
+          return
+        }
+        await window.api.speech.stopDictation(sessionId).catch(() => undefined)
+        drainStoppedSession(sessionId)
+        if (captureStarted) {
+          stopCapture()
+        }
+        discardBufferedAudio()
+        const message = String(err)
+        if (insertionTargetRef.current?.kind === 'conversation') {
+          insertionTargetRef.current.target.onError(message)
+        }
+        insertionTargetRef.current = null
+        intentionalTargetCancellationRef.current = false
+        stopRequestedDuringStartRef.current = false
+        finalTranscriptReceivedRef.current = false
+        erroredSessionIdsRef.current.clear()
+        insertedFinalTranscriptRef.current = ''
+        activeSessionIdRef.current = null
+        setPartialTranscript('')
+        if (message.includes('dictation_canceled')) {
+          dictationStateRef.current = 'idle'
+          setDictationState('idle')
+          return
+        }
+        dictationStateRef.current = 'error'
+        setDictationState('error')
+        showDictationStartErrorToast(message)
         dictationStateRef.current = 'idle'
         setDictationState('idle')
-        return
       }
-      dictationStateRef.current = 'error'
-      setDictationState('error')
-      showDictationStartErrorToast(message)
-      dictationStateRef.current = 'idle'
-      setDictationState('idle')
-    }
-  }, [
-    settings,
-    setDictationState,
-    startCapture,
-    flushBufferedAudio,
-    discardBufferedAudio,
-    stopCapture,
-    finishDictationSession,
-    drainStoppedSession,
-    setPartialTranscript,
-    recordFeatureInteraction
-  ])
+    },
+    [
+      settings,
+      setDictationState,
+      startCapture,
+      flushBufferedAudio,
+      discardBufferedAudio,
+      stopCapture,
+      finishDictationSession,
+      drainStoppedSession,
+      setPartialTranscript,
+      recordFeatureInteraction
+    ]
+  )
 
   const stopDictation = useCallback(async () => {
     if (dictationStateRef.current === 'starting') {
@@ -419,5 +425,5 @@ export function DictationController() {
     }
   }, [setPartialTranscript, setDictationState, stopCapture, discardBufferedAudio])
 
-  return <DictationIndicator />
+  return insertionTargetRef.current?.kind === 'conversation' ? null : <DictationIndicator />
 }
