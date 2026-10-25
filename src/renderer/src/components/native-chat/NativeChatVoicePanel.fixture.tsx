@@ -1,7 +1,41 @@
 import { defineFixture } from '../../component-fixtures/component-fixture'
-import { getDefaultSettings } from '../../../../shared/constants'
+import { getDefaultSettings, getDefaultVoiceSettings } from '../../../../shared/constants'
 import { NativeChatVoicePanel, type NativeChatVoicePanelProps } from './NativeChatVoicePanel'
 import { NativeChatWorkModePicker } from './NativeChatWorkModePicker'
+import { NativeChatVoiceSettings } from './NativeChatVoiceSettings'
+import type { SessionOptionDescriptor } from '../../../../shared/native-chat-session-options'
+
+const options: SessionOptionDescriptor[] = [
+  {
+    id: 'model',
+    label: 'Model',
+    category: 'model',
+    settable: true,
+    valueSource: 'applied',
+    transport: 'agent-session',
+    kind: {
+      type: 'select',
+      currentValue: 'gpt-6.1-sol',
+      choices: [{ value: 'gpt-6.1-sol', label: 'GPT-6.1-Sol' }]
+    }
+  },
+  {
+    id: 'effort',
+    label: 'Reasoning effort',
+    category: 'thought_level',
+    settable: true,
+    valueSource: 'applied',
+    transport: 'agent-session',
+    kind: {
+      type: 'select',
+      currentValue: 'low',
+      choices: [
+        { value: 'low', label: 'Low' },
+        { value: 'high', label: 'High' }
+      ]
+    }
+  }
+]
 
 const props: NativeChatVoicePanelProps = {
   running: true,
@@ -27,6 +61,23 @@ function Panel(overrides: Partial<NativeChatVoicePanelProps>): React.JSX.Element
   return (
     <div className="bg-sidebar text-sidebar-foreground">
       <div className="border-b border-border px-3 py-2 text-sm font-medium">음성 대화</div>
+      <NativeChatVoiceSettings
+        voice={{
+          ...getDefaultVoiceSettings(),
+          sttModel: 'elevenlabs-scribe-v2-realtime',
+          ttsProvider: 'elevenlabs'
+        }}
+        working={false}
+        transport={{
+          optionSnapshot: options,
+          optionsSurface: {
+            getSnapshot: () => options,
+            subscribe: () => () => {},
+            setOption: async () => ({ snapshot: options }),
+            invokeAction: async () => ({ snapshot: options })
+          }
+        }}
+      />
       <NativeChatVoicePanel {...props} {...overrides} />
       <NativeChatWorkModePicker
         mode="brainstorm"

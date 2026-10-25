@@ -94,4 +94,23 @@ describe('ElevenLabs speech requests', () => {
       'elevenlabs_response_failed'
     )
   })
+
+  it('delivers PCM chunks before the response ends without buffering another copy', async () => {
+    const body = new TransformStream<Uint8Array, Uint8Array>()
+    const writer = body.writable.getWriter()
+    const fetchMock = vi.fn(async () => new Response(body.readable))
+    vi.stubGlobal('fetch', fetchMock)
+    const chunk = vi.fn()
+    const result = synthesizeElevenLabsSpeech(input, new AbortController().signal, chunk)
+    await writer.write(new Uint8Array([1, 2]))
+    await vi.waitFor(() => expect(chunk).toHaveBeenCalledWith(new Uint8Array([1, 2])))
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.elevenlabs.io/v1/text-to-speech/test_voice/stream?output_format=pcm_24000',
+      expect.anything()
+    )
+    await writer.write(new Uint8Array([3, 4]))
+    await writer.close()
+    expect(await result).toHaveLength(0)
+    expect(chunk).toHaveBeenCalledTimes(2)
+  })
 })

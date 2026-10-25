@@ -1,5 +1,8 @@
 {
   "stsLive": {
+    "inputProvider": "Speech recognition",
+    "localStt": "Local Korean recognition",
+    "effortHint": "Lower reasoning effort reduces reply wait time. MAS keeps its separate specialist setting.",
     "start": "Start voice conversation",
     "end": "End voice conversation",
     "interrupt": "Interrupt and speak",

@@ -94,6 +94,7 @@ jobs:
           src/renderer/src/components/native-chat/NativeChatStructuredSession.availability-notice.test.tsx
           src/shared/sts-voice-playback.test.ts
           src/main/speech/elevenlabs-speech-client.test.ts
+          src/renderer/src/components/dictation/elevenlabs-stream-playback.test.ts
           src/main/speech/elevenlabs-transcription-session.test.ts
           src/main/startup/dev-instance-identity.test.ts
           src/main/updater.build-channel-selection.test.ts

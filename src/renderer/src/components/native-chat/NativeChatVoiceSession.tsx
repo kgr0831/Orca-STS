@@ -1,4 +1,6 @@
 import { NativeChatVoiceConversation } from './NativeChatVoiceConversation'
+import { NativeChatVoiceSettings } from './NativeChatVoiceSettings'
+import { useAppStore } from '@/store'
 import { NativeChatWorkModePicker } from './NativeChatWorkModePicker'
 import { useNativeChatWorkMode } from './use-native-chat-work-mode'
 import type { useNativeChatInstallSlot } from './NativeChatInstallSlot'
@@ -27,8 +29,10 @@ export function NativeChatVoiceSession({
   isVisible: boolean
 }): React.JSX.Element {
   const workMode = useNativeChatWorkMode(transport, true, 'brainstorm')
+  const voice = useAppStore((store) => store.settings?.voice)
   return (
     <div className="scrollbar-sleek flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+      <NativeChatVoiceSettings voice={voice} transport={transport} working={controller.isWorking} />
       <NativeChatVoiceConversation
         active={isVisible}
         blocked={

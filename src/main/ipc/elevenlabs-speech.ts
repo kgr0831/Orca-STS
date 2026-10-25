@@ -67,6 +67,16 @@ export function registerElevenLabsSpeechHandlers(store: Store): void {
     const input = validateElevenLabsSpeechRequest(value)
     return run(event.sender, input.requestId, (signal) => synthesizeElevenLabsSpeech(input, signal))
   })
+  ipcMain.handle('speech:streamElevenLabs', (event, value: unknown) => {
+    const input = validateElevenLabsSpeechRequest(value)
+    return run(event.sender, input.requestId, async (signal) => {
+      await synthesizeElevenLabsSpeech(input, signal, (bytes) => {
+        if (!signal.aborted && !event.sender.isDestroyed()) {
+          event.sender.send('speech:elevenLabsAudio', { requestId: input.requestId, bytes })
+        }
+      })
+    })
+  })
   ipcMain.handle('speech:cancelElevenLabs', (event, id: unknown) => {
     if (typeof id === 'string') {
       requests.get(`${event.sender.id}:${id}`)?.abort()

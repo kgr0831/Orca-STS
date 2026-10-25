@@ -88,6 +88,8 @@ export type VoiceSettings = {
 
 export type ElevenLabsVoice = { id: string; name: string }
 
+export type ElevenLabsAudioChunk = { requestId: string; bytes: Uint8Array }
+
 export type ElevenLabsSpeechRequest = {
   requestId: string
   text: string
