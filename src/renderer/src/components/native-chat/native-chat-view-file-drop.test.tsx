@@ -70,7 +70,8 @@ it('gives the sidebar exclusive ownership of its chat and restores the full tab 
   expect(screen.queryByTestId('transcript')).not.toBeNull()
   act(() => useVoiceSidebarSessions.setState({ mountedTabId: props.tabId }))
   expect(screen.queryByTestId('transcript')).toBeNull()
-  view.rerender(<NativeChatView {...props} presentation="voice-sidebar" />)
+  const sidebarProps: NativeChatStructuredViewProps = { ...props, presentation: 'voice-sidebar' }
+  view.rerender(<NativeChatView {...sidebarProps} />)
   expect(screen.queryByTestId('transcript')).not.toBeNull()
   view.rerender(<NativeChatView {...props} />)
   expect(screen.queryByTestId('transcript')).toBeNull()
