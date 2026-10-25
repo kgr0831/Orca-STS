@@ -1,4 +1,44 @@
 {
+  "stsWorkModes": {
+    "label": "Mode de travail",
+    "nextMessage": "S’applique à vos prochains messages.",
+    "default": {
+      "label": "Par défaut",
+      "description": "Suit les instructions de la session existante."
+    },
+    "brainstorm": {
+      "label": "Brainstorming",
+      "description": "Explore des idées et compare les options par la conversation."
+    },
+    "requirements": {
+      "label": "Exigences",
+      "description": "Précise les objectifs, le périmètre, les contraintes et les critères d’acceptation."
+    },
+    "design": {
+      "label": "Conception",
+      "description": "Examine le code existant et discute de l’architecture avant l’implémentation."
+    },
+    "implement": {
+      "label": "Développement",
+      "description": "Implémente les modifications demandées et effectue les vérifications pertinentes."
+    },
+    "debug": {
+      "label": "Débogage",
+      "description": "Reproduit le problème, recherche sa cause et vérifie la correction."
+    },
+    "review": {
+      "label": "Revue de code",
+      "description": "Examine les modifications et présente les constats sans modifier les fichiers."
+    },
+    "document": {
+      "label": "Documentation",
+      "description": "Rédige ou actualise la documentation, les décisions et les notes de passation."
+    },
+    "general": {
+      "label": "Tâches générales",
+      "description": "Recherche, compare, planifie et réalise le travail demandé."
+    }
+  },
   "app": {
     "saving": {
       "delayedTitle": "Le stockage du profil prend plus de temps que d’habitude",

@@ -1,4 +1,44 @@
 {
+  "stsWorkModes": {
+    "label": "Modo de trabajo",
+    "nextMessage": "Se aplica a tus próximos mensajes.",
+    "default": {
+      "label": "Predeterminado",
+      "description": "Sigue las instrucciones de la sesión actual."
+    },
+    "brainstorm": {
+      "label": "Lluvia de ideas",
+      "description": "Explora ideas y compara alternativas mediante la conversación."
+    },
+    "requirements": {
+      "label": "Requisitos",
+      "description": "Aclara objetivos, alcance, restricciones y criterios de aceptación."
+    },
+    "design": {
+      "label": "Diseño",
+      "description": "Examina el código existente y analiza la arquitectura antes de implementar."
+    },
+    "implement": {
+      "label": "Desarrollo",
+      "description": "Implementa los cambios solicitados y ejecuta las comprobaciones pertinentes."
+    },
+    "debug": {
+      "label": "Depuración",
+      "description": "Reproduce el problema, investiga su causa y verifica la solución."
+    },
+    "review": {
+      "label": "Revisión de código",
+      "description": "Examina los cambios e informa de los hallazgos sin editar archivos."
+    },
+    "document": {
+      "label": "Documentación",
+      "description": "Redacta o actualiza documentación, decisiones y notas de traspaso."
+    },
+    "general": {
+      "label": "Tareas generales",
+      "description": "Investiga, compara, planifica y realiza el trabajo solicitado."
+    }
+  },
   "app": {
     "saving": {
       "delayedTitle": "El almacenamiento del perfil está tardando más de lo habitual",

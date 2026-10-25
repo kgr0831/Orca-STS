@@ -1,4 +1,44 @@
 {
+  "stsWorkModes": {
+    "label": "Work mode",
+    "nextMessage": "Applies to your next messages.",
+    "default": {
+      "label": "Default",
+      "description": "Follow the existing session instructions."
+    },
+    "brainstorm": {
+      "label": "Brainstorm",
+      "description": "Explore ideas and compare alternatives through conversation."
+    },
+    "requirements": {
+      "label": "Requirements",
+      "description": "Clarify goals, scope, constraints, and acceptance criteria."
+    },
+    "design": {
+      "label": "Design",
+      "description": "Inspect existing code and discuss architecture before implementation."
+    },
+    "implement": {
+      "label": "Development",
+      "description": "Implement the requested changes and run relevant checks."
+    },
+    "debug": {
+      "label": "Debug",
+      "description": "Reproduce the issue, investigate its cause, and verify a fix."
+    },
+    "review": {
+      "label": "Code review",
+      "description": "Inspect changes and report findings without editing files."
+    },
+    "document": {
+      "label": "Documentation",
+      "description": "Draft or update documentation, decisions, and handoff notes."
+    },
+    "general": {
+      "label": "General tasks",
+      "description": "Research, compare, plan, and carry out the requested work."
+    }
+  },
   "csv": {
     "detectingDelimiter": "Detecting delimiter…",
     "indexProgress": "Indexing CSV… {{percent}}%",

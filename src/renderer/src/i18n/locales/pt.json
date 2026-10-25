@@ -1,4 +1,44 @@
 {
+  "stsWorkModes": {
+    "label": "Modo de trabalho",
+    "nextMessage": "Aplica-se às suas próximas mensagens.",
+    "default": {
+      "label": "Padrão",
+      "description": "Segue as instruções da sessão existente."
+    },
+    "brainstorm": {
+      "label": "Brainstorming",
+      "description": "Explora ideias e compara alternativas por meio da conversa."
+    },
+    "requirements": {
+      "label": "Requisitos",
+      "description": "Esclarece objetivos, escopo, restrições e critérios de aceitação."
+    },
+    "design": {
+      "label": "Design",
+      "description": "Examina o código existente e discute a arquitetura antes da implementação."
+    },
+    "implement": {
+      "label": "Desenvolvimento",
+      "description": "Implementa as alterações solicitadas e executa as verificações pertinentes."
+    },
+    "debug": {
+      "label": "Depuração",
+      "description": "Reproduz o problema, investiga sua causa e verifica a correção."
+    },
+    "review": {
+      "label": "Revisão de código",
+      "description": "Examina alterações e relata os problemas encontrados sem editar arquivos."
+    },
+    "document": {
+      "label": "Documentação",
+      "description": "Redige ou atualiza documentação, decisões e notas de transição."
+    },
+    "general": {
+      "label": "Tarefas gerais",
+      "description": "Pesquisa, compara, planeja e realiza o trabalho solicitado."
+    }
+  },
   "common": {
     "retry": "Tentar novamente",
     "cancel": "Cancelar"

@@ -1,4 +1,44 @@
 {
+  "stsWorkModes": {
+    "label": "作業モード",
+    "nextMessage": "次のメッセージから適用されます。",
+    "default": {
+      "label": "標準",
+      "description": "既存のセッションの指示に従います。"
+    },
+    "brainstorm": {
+      "label": "ブレインストーミング",
+      "description": "対話でアイデアを広げ、代替案を比較します。"
+    },
+    "requirements": {
+      "label": "要件整理",
+      "description": "目標、範囲、制約、完了条件を明確にします。"
+    },
+    "design": {
+      "label": "設計",
+      "description": "既存コードを確認し、実装前に構成を検討します。"
+    },
+    "implement": {
+      "label": "開発",
+      "description": "依頼された変更を実装し、関連する検証を行います。"
+    },
+    "debug": {
+      "label": "デバッグ",
+      "description": "問題を再現し、原因を調査して修正を検証します。"
+    },
+    "review": {
+      "label": "コードレビュー",
+      "description": "ファイルを編集せずに変更を確認し、問題を報告します。"
+    },
+    "document": {
+      "label": "文書化",
+      "description": "文書、決定事項、引き継ぎ記録を作成・更新します。"
+    },
+    "general": {
+      "label": "一般作業",
+      "description": "調査、比較、計画など、依頼された作業を行います。"
+    }
+  },
   "app": {
     "saving": {
       "delayedTitle": "プロファイルのストレージ処理に通常より時間がかかっています",

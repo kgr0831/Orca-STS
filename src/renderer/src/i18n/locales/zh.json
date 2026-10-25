@@ -1,4 +1,44 @@
 {
+  "stsWorkModes": {
+    "label": "工作模式",
+    "nextMessage": "从下一条消息开始应用。",
+    "default": {
+      "label": "默认",
+      "description": "遵循现有会话的指令。"
+    },
+    "brainstorm": {
+      "label": "头脑风暴",
+      "description": "通过对话拓展想法并比较备选方案。"
+    },
+    "requirements": {
+      "label": "需求梳理",
+      "description": "明确目标、范围、约束和验收标准。"
+    },
+    "design": {
+      "label": "设计",
+      "description": "检查现有代码，在实现前讨论架构。"
+    },
+    "implement": {
+      "label": "开发",
+      "description": "实现请求的变更并执行相关检查。"
+    },
+    "debug": {
+      "label": "调试",
+      "description": "复现问题、调查原因并验证修复。"
+    },
+    "review": {
+      "label": "代码审查",
+      "description": "检查变更并报告问题，不编辑文件。"
+    },
+    "document": {
+      "label": "文档",
+      "description": "编写或更新文档、决策和交接记录。"
+    },
+    "general": {
+      "label": "一般任务",
+      "description": "完成请求的调研、比较、规划等工作。"
+    }
+  },
   "app": {
     "saving": {
       "delayedTitle": "配置存储操作耗时比平时更长",

@@ -51,6 +51,8 @@ import { useAppStore } from '../../store'
 import { structuredAgentLabel } from '@/lib/structured-agent-session-launch-label'
 import { useNativeChatStructuredComposerTransport } from './use-native-chat-structured-composer-transport'
 import { NativeChatStructuredGoalStrip } from './NativeChatStructuredGoalStrip'
+import { NativeChatWorkModePicker } from './NativeChatWorkModePicker'
+import { useNativeChatWorkMode } from './use-native-chat-work-mode'
 import { nativeChatPaneHeader } from './NativeChatPaneHeader'
 import { structuredAgentSessionReadFailureNotice } from './structured-agent-session-read-failure-notice'
 import { useStructuredAgentSessionDeliveryNotices } from './use-structured-agent-session-delivery-notices'
@@ -222,6 +224,7 @@ export function NativeChatStructuredSession(
     onSubmitted: submits.revealLatest,
     sendBlockedReason: hostPermission.sendBlockedReason ?? install.sendBlockedReason
   })
+  const workMode = useNativeChatWorkMode(structuredTransport, props.agent === 'codex')
   const asyncQuestion = { paneKey, session, send: structuredTransport.send }
   const continuation = useNativeChatInterruptedContinuation({
     ...controller,
@@ -392,6 +395,9 @@ export function NativeChatStructuredSession(
           ) : null}
           {prompt ? null : <NativeChatStructuredAsyncQuestion {...asyncQuestion} />}
           {composerShown && <NativeChatInstallSlot slot={install.slot} agentLabel={agentLabel} />}
+          {composerShown && props.agent === 'codex' ? (
+            <NativeChatWorkModePicker mode={workMode.mode} onChange={workMode.setMode} />
+          ) : null}
           {composerShown ? (
             <NativeChatComposer
               ref={composerRef}
@@ -403,7 +409,7 @@ export function NativeChatStructuredSession(
               {...stopControls.composer}
               unavailableHint={install.unavailableHint}
               steerQueued={stopControls.stopping ? undefined : submits.queuedMessages.steerNewest}
-              structuredTransport={structuredTransport}
+              structuredTransport={workMode.transport}
               launchSeed={{ ...launchDraftSignal, ownsTabWideLaunchDraft: true }}
               notices={notices}
               recallSource={{ messages: session.messages, withoutImageMarkers: true }}
