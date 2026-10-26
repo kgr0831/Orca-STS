@@ -1,0 +1,312 @@
+{
+  "intent": {
+    "training": 232,
+    "tested": 34,
+    "correct": 32,
+    "failures": [
+      {
+        "text": "아하 이해되네",
+        "expected": "backchannel",
+        "predicted": "speech",
+        "score": 0.5455750856550057
+      },
+      {
+        "text": "멈추지 마",
+        "expected": "speech",
+        "predicted": "stop",
+        "score": 0.6972687474705366
+      }
+    ],
+    "tests": [
+      {
+        "text": "응 그렇구나",
+        "expected": "backchannel",
+        "predicted": "backchannel",
+        "score": 0.8093869353356606
+      },
+      {
+        "text": "네 맞습니다",
+        "expected": "backchannel",
+        "predicted": "backchannel",
+        "score": 0.9772503737834154
+      },
+      {
+        "text": "아하 이해되네",
+        "expected": "backchannel",
+        "predicted": "speech",
+        "score": 0.5455750856550057
+      },
+      {
+        "text": "그렇지 그렇지",
+        "expected": "backchannel",
+        "predicted": "backchannel",
+        "score": 0.9981359545327556
+      },
+      {
+        "text": "맞아 맞아",
+        "expected": "backchannel",
+        "predicted": "backchannel",
+        "score": 0.9743865727880155
+      },
+      {
+        "text": "응 듣고 있어",
+        "expected": "backchannel",
+        "predicted": "backchannel",
+        "score": 0.9101387977584254
+      },
+      {
+        "text": "오 그렇네요",
+        "expected": "backchannel",
+        "predicted": "backchannel",
+        "score": 0.9292869912282588
+      },
+      {
+        "text": "네 잘 알겠어요",
+        "expected": "backchannel",
+        "predicted": "backchannel",
+        "score": 0.9244013417428861
+      },
+      {
+        "text": "어 그렇구나",
+        "expected": "backchannel",
+        "predicted": "backchannel",
+        "score": 0.6349306891575285
+      },
+      {
+        "text": "그래 계속 얘기해",
+        "expected": "backchannel",
+        "predicted": "backchannel",
+        "score": 0.839365397801688
+      },
+      {
+        "text": "네? 잘 못 들었어요",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.9487936058394705
+      },
+      {
+        "text": "응? 무슨 소리야",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.9473998055067486
+      },
+      {
+        "text": "왜 그렇게 생각해?",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.9959167074550319
+      },
+      {
+        "text": "아니 잠깐 파일 이름이 달라",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.9946483969857297
+      },
+      {
+        "text": "응 그럼 저장해줘",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.5668045161764944
+      },
+      {
+        "text": "네 근데 테스트가 실패했어",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.8399218792824295
+      },
+      {
+        "text": "그건 틀린 설명이야",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.6487126816222893
+      },
+      {
+        "text": "다른 모델로 바꿔줘",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.9461491789080124
+      },
+      {
+        "text": "멈추지 마",
+        "expected": "speech",
+        "predicted": "stop",
+        "score": 0.6972687474705366
+      },
+      {
+        "text": "그만하라는 게 아니라 수정해달라고",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.924612539313117
+      },
+      {
+        "text": "잠시만 API 키가 잘못 들어갔어",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.5832959182028602
+      },
+      {
+        "text": "그래 근데 그 비용은?",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.999100963382287
+      },
+      {
+        "text": "음 그 코드를 좀 봐줄래",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.6742969711042568
+      },
+      {
+        "text": "맞아 그걸 적용해줘",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.7555330505051493
+      },
+      {
+        "text": "아니요 취소하고 이전 버전으로 돌려줘",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.9295458885141045
+      },
+      {
+        "text": "뭐지?",
+        "expected": "speech",
+        "predicted": "speech",
+        "score": 0.98458565319561
+      },
+      {
+        "text": "잠깐 기다려줄래",
+        "expected": "stop",
+        "predicted": "stop",
+        "score": 0.8013113745337251
+      },
+      {
+        "text": "잠시 말을 멈춰줘",
+        "expected": "stop",
+        "predicted": "stop",
+        "score": 0.7808409240005393
+      },
+      {
+        "text": "내 생각부터 정리할게",
+        "expected": "stop",
+        "predicted": "stop",
+        "score": 0.5191934059875599
+      },
+      {
+        "text": "말 좀 멈춰봐",
+        "expected": "stop",
+        "predicted": "stop",
+        "score": 0.9014561821275677
+      },
+      {
+        "text": "아 잠깐만 기다려봐",
+        "expected": "stop",
+        "predicted": "stop",
+        "score": 0.5754639489296932
+      },
+      {
+        "text": "답변 잠시 중단해줘",
+        "expected": "stop",
+        "predicted": "stop",
+        "score": 0.6372254421886414
+      },
+      {
+        "text": "지금 대답하지 말아봐",
+        "expected": "stop",
+        "predicted": "stop",
+        "score": 0.49979230334064245
+      },
+      {
+        "text": "생각할 시간 좀 줘",
+        "expected": "stop",
+        "predicted": "stop",
+        "score": 0.4741844729765037
+      }
+    ]
+  },
+  "context": {
+    "training": 56,
+    "tested": 12,
+    "correct": 12,
+    "failures": [],
+    "tests": [
+      {
+        "text": "이 변경을 반영할까요?",
+        "expected": "question",
+        "predicted": "question",
+        "score": 0.868166133525262
+      },
+      {
+        "text": "이대로 진행해도 될까요",
+        "expected": "question",
+        "predicted": "question",
+        "score": 0.9652249898736797
+      },
+      {
+        "text": "설명 더 해드릴까요?",
+        "expected": "question",
+        "predicted": "question",
+        "score": 0.9997273175518854
+      },
+      {
+        "text": "지금 다시 시작할까요?",
+        "expected": "question",
+        "predicted": "question",
+        "score": 0.9336828663330166
+      },
+      {
+        "text": "맞게 이해한 건가요?",
+        "expected": "question",
+        "predicted": "question",
+        "score": 0.9990282966387962
+      },
+      {
+        "text": "작업을 시작해도 괜찮을지 알려주세요.",
+        "expected": "question",
+        "predicted": "question",
+        "score": 0.9673729688114152
+      },
+      {
+        "text": "우선 설정 파일부터 살펴보겠습니다.",
+        "expected": "statement",
+        "predicted": "statement",
+        "score": 0.9999736416192481
+      },
+      {
+        "text": "이 방법의 비용을 계산하고 있어요.",
+        "expected": "statement",
+        "predicted": "statement",
+        "score": 0.9999975291781179
+      },
+      {
+        "text": "첫 번째 원인은 메모리 사용량입니다.",
+        "expected": "statement",
+        "predicted": "statement",
+        "score": 0.999997980118608
+      },
+      {
+        "text": "질문하신 기능은 다음과 같이 동작합니다.",
+        "expected": "statement",
+        "predicted": "statement",
+        "score": 0.9999954414910268
+      },
+      {
+        "text": "검증이 끝나면 결과를 알려드리겠습니다.",
+        "expected": "statement",
+        "predicted": "statement",
+        "score": 0.9993754796116252
+      },
+      {
+        "text": "이대로 진행해서 결과를 확인하겠습니다.",
+        "expected": "statement",
+        "predicted": "statement",
+        "score": 0.9977890534695034
+      }
+    ]
+  },
+  "inferenceMs": {
+    "median": 1.0775999999996202,
+    "p95": 1.5994999999993524
+  },
+  "note": "Synthetic development examples inspected during fitting; not independent accuracy or a microphone evaluation. Scores are uncalibrated."
+}

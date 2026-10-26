@@ -1,7 +1,7 @@
 const base = require('./electron-builder.config.cjs')
 const manifest = require('../package.json')
 
-const version = process.env.ORCA_STS_VERSION ?? `${manifest.version}-sts.4`
+const version = process.env.ORCA_STS_VERSION ?? `${manifest.version}-sts.5`
 if (!/^\d+\.\d+\.\d+-sts\.\d+$/.test(version)) {
   throw new Error('Orca-STS versions must use <upstream version>-sts.<number>')
 }
@@ -11,6 +11,14 @@ module.exports = {
   appId: 'com.kgr0831.orca.sts',
   productName: 'Orca-STS',
   protocols: [],
+  extraResources: [
+    ...(Array.isArray(base.extraResources)
+      ? base.extraResources
+      : base.extraResources
+        ? [base.extraResources]
+        : []),
+    { from: 'resources/licenses/voice-models', to: 'licenses/voice-models' }
+  ],
   forceCodeSigning: false,
   extraMetadata: {
     ...base.extraMetadata,

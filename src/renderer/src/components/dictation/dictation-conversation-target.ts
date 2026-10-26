@@ -1,4 +1,5 @@
 export type DictationConversationTarget = {
+  onAudio?: (samples: Float32Array, sampleRate: number) => void
   acceptsCapture?: () => boolean
   onPartial: (text: string) => void
   onFinal: (text: string) => void
@@ -14,6 +15,7 @@ export function registerDictationConversationTarget(
 ): () => void {
   let current = true
   const guarded: DictationConversationTarget = {
+    onAudio: (samples, rate) => current && target.onAudio?.(samples, rate),
     acceptsCapture: () => current && (target.acceptsCapture?.() ?? true),
     onPartial: (text) => current && target.onPartial(text),
     onFinal: (text) => current && target.onFinal(text),

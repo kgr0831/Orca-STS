@@ -11,8 +11,10 @@ import type {
   SpeechTranscriptEvent
 } from '../../shared/speech-types'
 import type { PreloadApi } from '../api-types'
+import type { StsTurnModelAsset } from '../../shared/sts-turn-models'
 
 export const speechApi = {
+  loadTurnModels: (): Promise<StsTurnModelAsset[]> => ipcRenderer.invoke('speech:loadTurnModels'),
   getElevenLabsApiKeyStatus: (): Promise<{ configured: boolean }> =>
     ipcRenderer.invoke('speech:getElevenLabsApiKeyStatus'),
   saveElevenLabsApiKey: (key: string): Promise<{ configured: boolean }> =>

@@ -5,6 +5,9 @@ import { useAppStore } from '@/store'
 import { cn } from '@/lib/utils'
 
 export type NativeChatVoicePanelProps = {
+  modelLabel?: string
+  canSubmitSpoken?: boolean
+  onSubmitSpoken?: () => void
   running: boolean
   listening: boolean
   speaking: boolean
@@ -45,6 +48,9 @@ export function NativeChatVoicePanel(props: NativeChatVoicePanelProps): React.JS
         <p role="status" className="text-center text-sm font-medium">
           {props.stateLabel}
         </p>
+        {props.modelLabel ? (
+          <p className="text-center text-xs text-muted-foreground">{props.modelLabel}</p>
+        ) : null}
         <p className="text-center text-xs text-muted-foreground">
           {translate(
             'stsLive.hint',
@@ -65,6 +71,11 @@ export function NativeChatVoicePanel(props: NativeChatVoicePanelProps): React.JS
           <Button className="w-full" variant="outline" onClick={props.onInterrupt}>
             <Hand className="size-4" />
             {translate('stsLive.interrupt', 'Interrupt and speak')}
+          </Button>
+        ) : null}
+        {props.canSubmitSpoken ? (
+          <Button className="w-full" variant="outline" onClick={props.onSubmitSpoken}>
+            {translate('stsLocal.send', 'Send spoken words')}
           </Button>
         ) : null}
       </div>

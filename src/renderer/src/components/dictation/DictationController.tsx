@@ -146,6 +146,12 @@ export function DictationController() {
         // and buffer locally so speech during "Starting..." is not discarded.
         const preferredMicrophoneDeviceId = settings?.voice?.microphoneDeviceId ?? null
         const captureResult = await startCapture({
+          onAudio: (samples, sampleRate) => {
+            const target = insertionTargetRef.current
+            if (dictationRunRef.current === runId && target?.kind === 'conversation') {
+              target.target.onAudio?.(samples, sampleRate)
+            }
+          },
           bufferAudio: true,
           sessionId,
           microphoneDeviceId: preferredMicrophoneDeviceId,
@@ -218,7 +224,7 @@ export function DictationController() {
 
         dictationStateRef.current = 'listening'
         setDictationState('listening')
-        recordFeatureInteraction('voice-dictation')
+        void recordFeatureInteraction('voice-dictation')
       } catch (err) {
         if (dictationRunRef.current !== runId) {
           return

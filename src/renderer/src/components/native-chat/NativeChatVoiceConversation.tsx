@@ -3,7 +3,8 @@ import { translate } from '@/i18n/i18n'
 import { useAppStore } from '@/store'
 import type { NativeChatMessage } from '../../../../shared/native-chat-types'
 import { voiceMessageText } from '../../../../shared/sts-voice-playback'
-import { StsVoiceTurnTaking } from '../../../../shared/sts-voice-turn-taking'
+import { StsModelTurnTaking } from '../../../../shared/sts-model-turn-taking'
+import { StsLocalModelClient } from './sts-local-model-client'
 import type { NativeChatStructuredComposerTransport } from './native-chat-composer-types'
 import { completeNativeChatStructuredUserAction } from './native-chat-structured-user-action'
 import { useNativeChatVoiceInput } from './use-native-chat-voice-input'
@@ -24,6 +25,10 @@ export function NativeChatVoiceConversation(
   props: NativeChatVoiceConversationProps
 ): React.JSX.Element {
   const [running, setRunning] = useState(false)
+  const [preparing, setPreparing] = useState(false)
+  const [pendingSpeech, setPendingSpeech] = useState(false)
+  const preparation = useRef(0)
+  const models = useRef<StsLocalModelClient | null>(null)
   const [sending, setSending] = useState(false)
   const [awaiting, setAwaiting] = useState(false)
   const [interrupting, setInterrupting] = useState(false)
@@ -37,7 +42,7 @@ export function NativeChatVoiceConversation(
   const workSeen = useRef(false)
   const replyBaseline = useRef('')
   const turnBaseline = useRef<string | undefined>(undefined)
-  const gate = useRef<StsVoiceTurnTaking | null>(null)
+  const gate = useRef<StsModelTurnTaking | null>(null)
   const latestAnswer = props.messages.findLast((message) => voiceMessageText(message).trim())
   const answer = latestAnswer ? voiceMessageText(latestAnswer) : ''
   const replyRevision = latestAnswer ? `${latestAnswer.id}:${answer}` : ''
@@ -47,6 +52,11 @@ export function NativeChatVoiceConversation(
     autoSend: false,
     onReady: () => {},
     onBeforeStart: () => setNotice(''),
+    onAudio: (samples, rate) => {
+      if (runningRef.current) {
+        models.current?.feed(samples, rate)
+      }
+    },
     onTranscript: (text, final) => {
       if (runningRef.current) {
         gate.current?.receive(text, final)
@@ -86,6 +96,16 @@ export function NativeChatVoiceConversation(
     playback.speaking || playback.pending || props.working || (awaiting && !replyFinished)
 
   function end(): void {
+    const retained = gate.current?.pendingText
+    if (retained) {
+      queue.current = [queue.current, retained].filter(Boolean).join(' ')
+      setQueued(queue.current)
+      input.setDraft(queue.current)
+    }
+    ++preparation.current
+    setPreparing(false)
+    models.current?.close()
+    models.current = null
     runningRef.current = false
     setRunning(false)
     setAwaiting(false)
@@ -195,14 +215,40 @@ export function NativeChatVoiceConversation(
   }
   useEffect(() => {
     mounted.current = true
-    gate.current = new StsVoiceTurnTaking({
+    ++preparation.current
+    gate.current = new StsModelTurnTaking({
       output: () =>
         callbacks.current.outputActive
           ? {
-              text: callbacks.current.playbackText,
-              question: /[?？]\s*$/.test(callbacks.current.playbackText)
+              text: callbacks.current.playbackText
             }
           : null,
+      predict: (text, output, final) => {
+        if (!models.current) {
+          return Promise.reject(new Error('turn_model_unavailable'))
+        }
+        return models.current.predict(text, output, final)
+      },
+      error: () =>
+        setNotice(
+          translate(
+            'stsLocal.failed',
+            'Local voice judgment failed. Your captions are kept; use Send spoken words or restart voice.'
+          )
+        ),
+      waiting: () =>
+        setNotice(
+          translate(
+            'stsLocal.waiting',
+            'Waiting for the rest of your sentence. Keep speaking, or send the words now.'
+          )
+        ),
+      pending: (value) => {
+        if (mounted.current) {
+          setPendingSpeech(value)
+        }
+      },
+      clearAudio: () => models.current?.resetAudio(),
       interrupt: () => {
         if (runningRef.current) {
           callbacks.current.interrupt()
@@ -218,6 +264,8 @@ export function NativeChatVoiceConversation(
     return () => {
       mounted.current = false
       runningRef.current = false
+      models.current?.close()
+      models.current = null
       gate.current?.close()
     }
   }, [])
@@ -237,13 +285,14 @@ export function NativeChatVoiceConversation(
     }
   })
   useEffect(() => {
-    if (running && (!props.active || input.error || !playback.available)) {
+    if ((running || preparing) && (!props.active || input.error || !playback.available)) {
       end()
     }
   })
 
-  const stateLabel =
-    interrupting && props.working
+  const stateLabel = preparing
+    ? translate('stsLocal.preparing', 'Preparing local voice models (first download: 37 MB)…')
+    : interrupting && props.working
       ? translate('stsLive.interrupting', 'Stopping the reply…')
       : input.state === 'starting' && input.owned
         ? translate('stsVoice.starting', 'Starting microphone…')
@@ -267,7 +316,7 @@ export function NativeChatVoiceConversation(
         value={input.draft}
       />
       <NativeChatVoicePanel
-        running={running}
+        running={running || preparing}
         listening={input.owned}
         speaking={playback.speaking}
         stateLabel={stateLabel}
@@ -281,6 +330,9 @@ export function NativeChatVoiceConversation(
         canInterrupt={running && !interrupting && outputActive}
         userCaption={caption || input.draft}
         assistantCaption={answer}
+        modelLabel={translate('stsLocal.label', 'Local AI turn detection · experimental')}
+        canSubmitSpoken={running && pendingSpeech}
+        onSubmitSpoken={() => gate.current?.submit()}
         notice={
           notice ||
           input.error ||
@@ -301,8 +353,8 @@ export function NativeChatVoiceConversation(
           input.setDraft('')
           setNotice('')
         }}
-        onToggle={() => {
-          if (running) {
+        onToggle={async () => {
+          if (running || preparing) {
             end()
             if (props.working) {
               props.onStopAgent()
@@ -313,6 +365,33 @@ export function NativeChatVoiceConversation(
           playback.restart()
           setNotice('')
           setAwaiting(false)
+          const generation = ++preparation.current
+          setPreparing(true)
+          const client = new StsLocalModelClient()
+          models.current = client
+          try {
+            const load = window.api.speech.loadTurnModels
+            if (!load) {
+              throw new Error('local_turn_models_unsupported')
+            }
+            await client.start(load)
+          } catch {
+            if (generation !== preparation.current || !mounted.current) {
+              return
+            }
+            end()
+            setNotice(
+              translate(
+                'stsLocal.setupFailed',
+                'Could not prepare local voice models. Check the connection and restart voice. No cloud judgment was used.'
+              )
+            )
+            return
+          }
+          if (generation !== preparation.current || !mounted.current) {
+            return
+          }
+          setPreparing(false)
           runningRef.current = true
           setRunning(true)
           if (!input.start()) {

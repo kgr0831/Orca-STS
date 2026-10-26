@@ -93,7 +93,8 @@ jobs:
           src/renderer/src/components/native-chat/use-native-chat-work-mode.test.tsx
           src/renderer/src/components/native-chat/NativeChatStructuredSession.availability-notice.test.tsx
           src/shared/sts-voice-playback.test.ts
-          src/shared/sts-voice-turn-taking.test.ts
+          src/shared/sts-model-turn-taking.test.ts
+          src/renderer/src/components/native-chat/sts-local-model-client.test.ts
           src/renderer/src/components/native-chat/NativeChatVoiceConversation.test.tsx
           src/renderer/src/components/native-chat/use-native-chat-voice-input.test.tsx
           src/renderer/src/components/native-chat/use-native-chat-voice-preset.test.tsx
@@ -110,6 +111,12 @@ jobs:
 
       - name: Build Windows application
         run: pnpm build:release
+
+      - name: Verify local voice models in a headless browser
+        run: |
+          pnpm exec playwright-core install chromium
+          node config/voice-models/download.mjs .cache/voice-models
+          node config/voice-models/smoke.mjs .cache/voice-models
 
       - name: Package Orca-STS Windows installer
         run: |
