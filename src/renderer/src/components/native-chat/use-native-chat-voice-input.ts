@@ -9,6 +9,7 @@ export function useNativeChatVoiceInput(args: {
   onReady: (text: string) => void
   onBeforeStart: () => void
   onTranscript?: (text: string, final: boolean) => void
+  onAudio?: (samples: Float32Array, sampleRate: number) => void
   onCaptureEnded?: () => void
 }) {
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -50,6 +51,11 @@ export function useNativeChatVoiceInput(args: {
       return
     }
     const unregister = registerDictationConversationTarget(element, {
+      onAudio: (samples, rate) => {
+        if (owns.current && !cancelled.current) {
+          latest.current.onAudio?.(samples, rate)
+        }
+      },
       acceptsCapture: () => owns.current,
       onPartial: (text) => {
         if (owns.current) {

@@ -38,6 +38,9 @@ const options: SessionOptionDescriptor[] = [
 ]
 
 const props: NativeChatVoicePanelProps = {
+  modelLabel: '로컬 AI 말차례 판단 · 시험 기능',
+  canSubmitSpoken: true,
+  onSubmitSpoken: () => {},
   running: true,
   listening: true,
   speaking: true,

@@ -10,7 +10,10 @@ import type {
   SpeechTranscriptEvent
 } from '../../shared/speech-types'
 
+import type { StsTurnModelAsset } from '../../shared/sts-turn-models'
+
 export type SpeechApi = {
+  loadTurnModels?: () => Promise<StsTurnModelAsset[]>
   getCatalog: () => Promise<SpeechModelManifest[]>
   getModelStates: () => Promise<SpeechModelState[]>
   getOpenAiApiKeyStatus: () => Promise<{
