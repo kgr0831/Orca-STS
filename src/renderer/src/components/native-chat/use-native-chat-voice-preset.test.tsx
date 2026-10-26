@@ -2,10 +2,25 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { expect, it, vi } from 'vitest'
 import type { NativeChatStructuredComposerTransport } from './native-chat-composer-types'
+import type { SessionOptionSetResult } from '../../../../shared/native-chat-session-options'
 import { useNativeChatVoicePreset } from './use-native-chat-voice-preset'
 
 function fixture(models = ['gpt-6-astra', 'gpt-6-luna', 'gpt-6.1-sol']) {
-  const setOption = vi.fn(async () => ({ snapshot: [] }))
+  const setOption = vi.fn(
+    async (id: string, value: string | boolean): Promise<SessionOptionSetResult> => ({
+      snapshot: [
+        {
+          id,
+          category: id === 'model' ? 'model' : 'thought_level',
+          label: id,
+          transport: 'agent-session',
+          valueSource: 'reported',
+          settable: true,
+          kind: { type: 'select', currentValue: String(value), choices: [] }
+        }
+      ]
+    })
+  )
   const transport: NativeChatStructuredComposerTransport = {
     sessionId: 'voice-a',
     runtime: 'local',
@@ -83,5 +98,14 @@ it('reports an option failure without looping or starting agent work', async () 
   expect(result.current.failed).toBe(true)
   expect(result.current.pending).toBe(false)
   rerender()
+  expect(f.setOption).toHaveBeenCalledOnce()
+})
+
+it('reports a refused write even when the option surface resolves normally', async () => {
+  const f = fixture()
+  f.setOption.mockResolvedValueOnce({ snapshot: f.transport.optionSnapshot })
+  const { result } = renderHook(() => useNativeChatVoicePreset(f.transport, true, false))
+  await waitFor(() => expect(result.current.failed).toBe(true))
+  expect(result.current.pending).toBe(false)
   expect(f.setOption).toHaveBeenCalledOnce()
 })
