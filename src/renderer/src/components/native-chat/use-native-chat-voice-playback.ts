@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { NativeChatMessage } from '../../../../shared/native-chat-types'
 import type { VoiceSettings } from '../../../../shared/speech-types'
-import { localKoreanVoice, StsVoicePlayback } from '../../../../shared/sts-voice-playback'
+import { localVoiceForLanguage, StsVoicePlayback } from '../../../../shared/sts-voice-playback'
 import { playElevenLabsSpeech } from '../dictation/elevenlabs-playback'
+import { useLocalSpeechVoices } from '../dictation/use-local-speech-voices'
 
 export function useNativeChatVoicePlayback(
   messages: readonly NativeChatMessage[],
   working: boolean,
   enabled: boolean,
   settings?: VoiceSettings,
-  paused = false
+  paused = false,
+  language = 'en'
 ) {
-  const [voice, setVoice] = useState<SpeechSynthesisVoice>()
+  const { voices } = useLocalSpeechVoices()
+  const voice = localVoiceForLanguage(voices, language, settings?.localVoiceUri)
   const [speaking, setSpeaking] = useState(false)
   const [caption, setCaption] = useState('')
   const [error, setError] = useState(false)
@@ -27,7 +30,7 @@ export function useNativeChatVoicePlayback(
     ? Boolean(
         settings?.elevenLabsApiKeyConfigured && voiceId && window.api.speech.synthesizeElevenLabs
       )
-    : Boolean(voice)
+    : Boolean(voice && typeof SpeechSynthesisUtterance !== 'undefined')
 
   const stop = useCallback(() => {
     const active = current.current
@@ -54,21 +57,10 @@ export function useNativeChatVoicePlayback(
   }, [])
 
   useEffect(() => {
-    const synth = window.speechSynthesis
-    if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
-      return
-    }
-    const refresh = () => setVoice(localKoreanVoice(synth.getVoices()))
-    refresh()
-    synth.addEventListener('voiceschanged', refresh)
-    return () => synth.removeEventListener('voiceschanged', refresh)
-  }, [])
-
-  useEffect(() => {
     playback.current.reset(latest.current)
     setError(false)
     return stop
-  }, [enabled, cloud, voiceId, modelId, available, stop])
+  }, [enabled, cloud, voiceId, modelId, available, voice?.voiceURI, language, stop])
 
   useEffect(() => {
     if (!enabled || paused || !available || error || current.current) {

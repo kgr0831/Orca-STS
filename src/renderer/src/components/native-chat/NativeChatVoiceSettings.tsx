@@ -23,9 +23,7 @@ export function NativeChatVoiceSettings({
         {translate('stsLive.inputProvider', 'Speech recognition')}:{' '}
         {voice?.sttModel === 'elevenlabs-scribe-v2-realtime'
           ? translate('stsLive.elevenLabsStt', 'ElevenLabs Scribe')
-          : voice?.sttModel === 'zipformer-streaming-korean'
-            ? translate('stsLive.localStt', 'Local Korean recognition')
-            : voice?.sttModel || '—'}
+          : voice?.sttModel || '—'}
         <br />
         {translate('elevenLabsVoice.output', 'Response voice (TTS)')}:{' '}
         {voice?.ttsProvider === 'elevenlabs'
@@ -34,8 +32,8 @@ export function NativeChatVoiceSettings({
       </p>
       <p className="text-xs text-chat-foreground-faint">
         {translate(
-          'stsLive.effortHint',
-          'Voice starts with Luna / low, or Sol / low when Luna is unavailable. MAS prefers Astra for difficult work.'
+          'stsHistory.modelHint',
+          'Voice uses this chat’s model and permissions. Change the model above when needed.'
         )}
       </p>
     </div>

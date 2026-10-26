@@ -22,6 +22,26 @@ const modelNames = {
   'intent-model.onnx': 'intent/onnx/model_quantized.onnx',
   'endpoint.onnx': 'endpoint/smart-turn-v3.2-cpu.onnx'
 }
+const multilingualCases = [
+  ['yes', 'backchannel'],
+  ['stop speaking', 'stop'],
+  ['Explain this function', 'speech'],
+  ['对', 'backchannel'],
+  ['停止说话', 'stop'],
+  ['能解释这个函数吗？', 'speech'],
+  ['そうですね', 'backchannel'],
+  ['話すのをやめて', 'stop'],
+  ['この関数を説明してもらえますか？', 'speech'],
+  ['entiendo', 'backchannel'],
+  ['deja de hablar', 'stop'],
+  ['¿Puedes explicar esta función?', 'speech'],
+  ['je vois', 'backchannel'],
+  ['arrête de parler', 'stop'],
+  ['Peux-tu expliquer cette fonction ?', 'speech'],
+  ['entendi', 'backchannel'],
+  ['pare de falar', 'stop'],
+  ['Você pode explicar esta função?', 'speech']
+]
 const server = createServer(async (request, response) => {
   try {
     const name = basename(new URL(request.url, 'http://localhost').pathname)
@@ -69,7 +89,7 @@ try {
   })
   await page.goto(`http://127.0.0.1:${server.address().port}/index.html`)
   const result = await page.evaluate(
-    async ({ worker, files }) => {
+    async ({ worker, files, multilingualCases }) => {
       const assets = await Promise.all(
         files.map(async (name) => ({
           name,
@@ -110,7 +130,8 @@ try {
           ['네?', '두 가지 방법을 비교할게요.'],
           ['아니 그 파일부터 수정해줘', ''],
           ['잠깐', ''],
-          ['멈추지 마', '']
+          ['멈추지 마', ''],
+          ...multilingualCases.map(([text]) => [text, ''])
         ]) {
           const start = performance.now()
           const prediction = await request({ type: 'predict', text, output })
@@ -136,8 +157,9 @@ try {
         model.terminate()
       }
     },
-    { worker, files: Object.keys(modelNames) }
+    { worker, files: Object.keys(modelNames), multilingualCases }
   )
+  console.log(JSON.stringify({ ...result, externalRequests: external.length, errors }, null, 2))
   assert.equal(external.length, 0, 'Inference must not use external services')
   assert.equal(result.rows[0].intent, 'backchannel')
   assert.equal(result.rows[1].expectsAnswer, true)
@@ -146,14 +168,22 @@ try {
   assert.equal(result.rows[4].intent, 'stop')
   assert.ok(
     result.rows[4].confidence >= STS_STOP_CONFIDENCE,
-    'A plain stop must interrupt promptly'
+    `A plain stop must interrupt promptly: ${JSON.stringify(result.rows[4])}`
   )
   assert.ok(
     result.rows[5].intent !== 'stop' || result.rows[5].confidence < STS_STOP_CONFIDENCE,
     'Negated stop must not be consumed'
   )
   assert.ok(Number.isFinite(result.endpoint) && result.endpoint >= 0 && result.endpoint <= 1)
-  console.log(JSON.stringify({ ...result, externalRequests: external.length, errors }, null, 2))
+  for (const [index, [text, intent]] of multilingualCases.entries()) {
+    assert.equal(result.rows[index + 6].intent, intent, text)
+    if (intent === 'stop') {
+      assert.ok(
+        result.rows[index + 6].confidence >= STS_STOP_CONFIDENCE,
+        JSON.stringify(result.rows[index + 6])
+      )
+    }
+  }
 } finally {
   await browser.close()
   await new Promise((resolve) => server.close(resolve))

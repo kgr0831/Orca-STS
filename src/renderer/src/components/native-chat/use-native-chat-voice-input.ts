@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppStore } from '@/store'
 import { registerDictationConversationTarget } from '../dictation/dictation-conversation-target'
 import { dispatchDictationControl } from '../dictation/dictation-control-events'
+import { resolveRendererUiLocale } from '../../../../shared/ui-locale'
+import { supportsVoiceConversation } from '../../../../shared/sts-voice-input-model'
 
 export function useNativeChatVoiceInput(args: {
   active: boolean
@@ -24,11 +26,12 @@ export function useNativeChatVoiceInput(args: {
   latest.current = args
   const state = useAppStore((store) => store.dictationState)
   const settings = useAppStore((store) => store.settings?.voice)
-  const ready =
-    settings?.enabled === true &&
-    (settings.sttModel === 'zipformer-streaming-korean' ||
-      (settings.sttModel === 'elevenlabs-scribe-v2-realtime' &&
-        settings.elevenLabsApiKeyConfigured === true))
+  const language = useAppStore(
+    (store) =>
+      store.settings?.voice?.conversationLanguage ??
+      resolveRendererUiLocale(store.settings?.uiLanguage ?? 'system')
+  )
+  const ready = supportsVoiceConversation(settings, language)
   const setDraft = useCallback((text: string) => {
     draftRef.current = text
     setDraftState(text)

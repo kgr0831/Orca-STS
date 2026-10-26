@@ -1,3 +1,5 @@
+import type { SupportedUiLocale } from './ui-locale'
+
 export type SpeechModelType =
   | 'transducer'
   | 'paraformer'
@@ -78,6 +80,8 @@ export type VoiceSettings = {
   openAiApiKeyConfigured: boolean
   elevenLabsApiKeyConfigured?: boolean
   ttsProvider?: 'local' | 'elevenlabs'
+  conversationLanguage?: SupportedUiLocale
+  localVoiceUri?: string
   elevenLabsVoiceId?: string
   elevenLabsTtsModel?: 'eleven_flash_v2_5' | 'eleven_multilingual_v2'
   /** null = system default input device */

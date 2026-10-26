@@ -84,7 +84,7 @@ export function NativeChatVoicePanel(props: NativeChatVoicePanelProps): React.JS
           <p className="text-xs text-muted-foreground">
             {translate(
               'stsLive.setup',
-              'Set up speech recognition and a playback voice in Voice settings to begin.'
+              'Choose a streaming speech model for your language or ElevenLabs Scribe in Voice settings. For local playback, install a system voice matching your Orca language.'
             )}
           </p>
           <Button

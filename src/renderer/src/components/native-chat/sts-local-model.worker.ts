@@ -90,7 +90,7 @@ async function initialize(assets: StsTurnModelAsset[]) {
     throw new Error('missing_endpoint_model')
   }
   endpoint = await ort.InferenceSession.create(model, { executionProviders: ['wasm'] })
-  await encoder('준비', { pooling: 'mean', normalize: true })
+  await encoder('ready', { pooling: 'mean', normalize: true })
   files.clear()
 }
 

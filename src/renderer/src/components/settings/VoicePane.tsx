@@ -13,6 +13,8 @@ import { handleVoiceDictationToggle } from './voice-dictation-toggle'
 import { VoiceDictationSettingsSection } from './VoiceDictationSettingsSection'
 import { VoiceSpeechModelSection } from './VoiceSpeechModelSection'
 import { ElevenLabsVoiceSettings } from './ElevenLabsVoiceSettings'
+import { VoiceConversationPreferences } from './VoiceConversationPreferences'
+import { resolveRendererUiLocale } from '../../../../shared/ui-locale'
 import { matchesSettingsSearch } from './settings-search'
 import { getOpenaiTranscriptionSearchEntry } from './voice-pane-search'
 import { translate } from '@/i18n/i18n'
@@ -222,10 +224,19 @@ export function VoicePane({ settings, updateSettings }: VoicePaneProps): React.J
         onUpdateVoiceSettings={updateVoiceSettings}
       />
 
+      <VoiceConversationPreferences
+        settings={voiceSettings}
+        uiLanguage={settings.uiLanguage ?? 'system'}
+        onUpdate={updateVoiceSettings}
+      />
       <VoiceSpeechModelSection
         voiceSettings={voiceSettings}
         catalog={catalog}
         modelStates={modelStates}
+        conversationLanguage={
+          voiceSettings.conversationLanguage ??
+          resolveRendererUiLocale(settings.uiLanguage ?? 'system')
+        }
         onUpdateVoiceSettings={updateVoiceSettings}
         onOpenOpenAiDialog={openOpenAiDialog}
         onConfigureElevenLabs={() => setElevenLabsConfigureRequest((value) => value + 1)}

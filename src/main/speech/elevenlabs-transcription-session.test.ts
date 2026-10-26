@@ -59,6 +59,11 @@ async function start() {
 }
 
 describe('ElevenLabs realtime dictation lifetime', () => {
+  it('lets Scribe detect the spoken language instead of forcing Korean', async () => {
+    const { session, socket } = await start()
+    expect(socket.url.searchParams.has('language_code')).toBe(false)
+    await session.finish()
+  })
   it('replaces partials and emits final text once, without replaying it on stop', async () => {
     const { events, session, socket } = await start()
     session.feedAudio(new Float32Array([-1, 0, 1]), 16000)
@@ -121,7 +126,7 @@ describe('ElevenLabs realtime dictation lifetime', () => {
 
   it('keeps an explicitly started conversation open during silence and detects a dead connection', async () => {
     const { session, socket, events } = await start()
-    expect(socket.url.searchParams.get('language_code')).toBe('ko')
+    expect(socket.url.searchParams.has('language_code')).toBe(false)
     expect(socket.url.searchParams.get('keepalive_interval_ms')).toBe('5000')
     for (let i = 0; i < 18; i++) {
       await vi.advanceTimersByTimeAsync(5000)

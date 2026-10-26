@@ -11,7 +11,7 @@
     "waiting": "Waiting for the chat to be ready",
     "reconnecting": "Listening again shortly…",
     "hint": "Listening stays on until you end the conversation. Acknowledgments let the reply continue; a new question or “stop” interrupts.",
-    "setup": "Set up speech recognition and a playback voice in Voice settings to begin.",
+    "setup": "Choose a streaming speech model for your language or ElevenLabs Scribe in Voice settings. For local playback, install a system voice matching your Orca language.",
     "captions": "Conversation captions",
     "yourCaption": "Your words appear here as you speak.",
     "answerCaption": "Voice replies and captions appear here.",
@@ -42,7 +42,7 @@
     "speaking": "Reading response",
     "working": "Codex is working",
     "ready": "Ready",
-    "setup": "Enable voice input and select Korean streaming or ElevenLabs Scribe in Settings → Voice.",
+    "setup": "Choose a streaming speech model for your language or ElevenLabs Scribe in Voice settings. For local playback, install a system voice matching your Orca language.",
     "settings": "Voice settings",
     "automatic": "Send after a pause and listen again after the reply",
     "read": "Read replies aloud",
@@ -21474,7 +21474,7 @@
     "model": "TTS model",
     "stop": "Stop preview",
     "preview": "Preview · uses credits",
-    "tone": "Calm, clear delivery with a slightly slower pace. Preview a Korean voice from your account before selecting it.",
+    "tone": "Calm, clear delivery with a slightly slower pace. Preview a voice in your language before selecting it.",
     "flash": "Flash v2.5",
     "multilingual": "Multilingual v2"
   },
@@ -21488,5 +21488,27 @@
   },
   "browserTab": {
     "agentDriving": "An agent is using this page"
+  },
+  "stsHistory": {
+    "voice": "Voice",
+    "title": "Conversation history",
+    "noChat": "No Codex chat selected",
+    "newChat": "New chat",
+    "createFailed": "Could not open a new chat. Try again.",
+    "selectChat": "Select an open Codex chat to continue by voice, or choose New chat.",
+    "modelHint": "Voice uses this chat’s model and permissions. Change the model above when needed."
+  },
+  "stsPreferences": {
+    "language": "Conversation language",
+    "appLanguage": "Follow app language",
+    "localVoice": "Installed system voice",
+    "automatic": "Automatic for this language",
+    "noVoices": "No local voice is available for this language. Install a system voice or select ElevenLabs output below.",
+    "install": "Install voices in your system’s speech or accessibility settings, then refresh. Only voices exposed to this app appear; availability varies by system.",
+    "refresh": "Refresh voices",
+    "windows": "Windows voice installation",
+    "mac": "macOS voice installation",
+    "liveModels": "Show live conversation models for this language",
+    "modelHelp": "Live conversation needs a streaming model for the chosen language. Download a local model or configure Scribe. Other models remain available for dictation."
   }
 }

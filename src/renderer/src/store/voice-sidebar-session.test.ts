@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 import { LOCAL_EXECUTION_HOST_ID, toRuntimeExecutionHostId } from '../../../shared/execution-host'
-import { openVoiceSidebarSession } from './voice-sidebar-session'
+import { createVoiceSidebarSession } from './voice-sidebar-session'
 import { useVoiceSidebarSessions } from './voice-sidebar-state'
 
 const fakes = vi.hoisted(() => ({ launch: vi.fn(), plan: vi.fn(() => ({})) }))
@@ -19,25 +19,24 @@ vi.mock('@/runtime/structured-agent-session-owner', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
-  useVoiceSidebarSessions.setState({ entries: {}, mountedTabId: null })
+  useVoiceSidebarSessions.setState({ entries: {}, portal: null })
 })
 
-it('joins repeated sidebar opens and retains an uncertain launch for recovery instead of duplicating it', async () => {
+it('deduplicates a pending New chat click and retains an uncertain launch for recovery', async () => {
   let settle: (result: { kind: 'visibility-unknown'; sessionId: string }) => void = () => {}
   fakes.launch.mockReturnValue({
     settlement: new Promise((resolve) => {
       settle = resolve
     })
   })
-  const first = openVoiceSidebarSession('local-folder', 'folder', LOCAL_EXECUTION_HOST_ID)
-  await openVoiceSidebarSession('local-folder', 'folder', LOCAL_EXECUTION_HOST_ID)
+  const first = createVoiceSidebarSession('local-folder', 'folder', LOCAL_EXECUTION_HOST_ID)
+  await createVoiceSidebarSession('local-folder', 'folder', LOCAL_EXECUTION_HOST_ID)
   expect(fakes.launch).toHaveBeenCalledTimes(1)
   expect(fakes.launch).toHaveBeenCalledWith(
-    expect.objectContaining({ activate: false, hooks: { activate: false } })
+    expect.objectContaining({ activate: true, hooks: { activate: true } })
   )
   settle({ kind: 'visibility-unknown', sessionId: 'uncertain' })
   await first
-  await openVoiceSidebarSession('local-folder', 'folder', LOCAL_EXECUTION_HOST_ID)
   expect(fakes.launch).toHaveBeenCalledTimes(1)
   expect(useVoiceSidebarSessions.getState().entries['local-folder']).toMatchObject({
     status: 'ready',
@@ -53,8 +52,8 @@ it('keeps conversations on their captured execution host when the same folder ex
     settlement: Promise.resolve({ kind: 'structured', sessionId: 'remote' })
   })
   const remote = toRuntimeExecutionHostId('paired-host')
-  await openVoiceSidebarSession('local-folder', 'folder', LOCAL_EXECUTION_HOST_ID)
-  await openVoiceSidebarSession('remote-folder', 'folder', remote)
+  await createVoiceSidebarSession('local-folder', 'folder', LOCAL_EXECUTION_HOST_ID)
+  await createVoiceSidebarSession('remote-folder', 'folder', remote)
   expect(fakes.plan).toHaveBeenLastCalledWith(
     {},
     expect.objectContaining({ selectedExecutionHostId: remote })

@@ -42,7 +42,7 @@ for (const task of ['intent', 'context']) {
     const total = exp.reduce((a, b) => a + b, 0)
     return exp.map((v) => v / total)
   }
-  for (let epoch = 0; epoch < 6000; epoch++) {
+  for (let epoch = 0; epoch < 48000; epoch++) {
     const gradient = w.map((row) => row.map(() => 0))
     for (const row of train) {
       const p = predict(row.x)

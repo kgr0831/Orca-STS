@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { NativeChatMessage } from './native-chat-types'
 import {
-  localKoreanVoice,
+  localVoiceForLanguage,
   spokenProse,
   StsVoicePlayback,
   voiceMessageText
@@ -61,7 +61,7 @@ describe('voice reply playback', () => {
     const remote = { lang: 'ko-KR', localService: false }
     const english = { lang: 'en-US', localService: true }
     const korean = { lang: 'ko-KR', localService: true }
-    expect(localKoreanVoice([remote, english])).toBeUndefined()
-    expect(localKoreanVoice([remote, english, korean])).toBe(korean)
+    expect(localVoiceForLanguage([remote, english], 'ko')).toBeUndefined()
+    expect(localVoiceForLanguage([remote, english, korean], 'ko')).toBe(korean)
   })
 })

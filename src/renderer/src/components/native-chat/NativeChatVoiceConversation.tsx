@@ -3,6 +3,7 @@ import { translate } from '@/i18n/i18n'
 import { useAppStore } from '@/store'
 import type { NativeChatMessage } from '../../../../shared/native-chat-types'
 import { voiceMessageText } from '../../../../shared/sts-voice-playback'
+import { resolveRendererUiLocale } from '../../../../shared/ui-locale'
 import { StsModelTurnTaking } from '../../../../shared/sts-model-turn-taking'
 import { StsLocalModelClient } from './sts-local-model-client'
 import type { NativeChatStructuredComposerTransport } from './native-chat-composer-types'
@@ -10,6 +11,7 @@ import { completeNativeChatStructuredUserAction } from './native-chat-structured
 import { useNativeChatVoiceInput } from './use-native-chat-voice-input'
 import { useNativeChatVoicePlayback } from './use-native-chat-voice-playback'
 import { NativeChatVoicePanel } from './NativeChatVoicePanel'
+import { nativeChatVoiceStateLabel } from './native-chat-voice-state-label'
 
 export type NativeChatVoiceConversationProps = {
   active: boolean
@@ -47,6 +49,11 @@ export function NativeChatVoiceConversation(
   const answer = latestAnswer ? voiceMessageText(latestAnswer) : ''
   const replyRevision = latestAnswer ? `${latestAnswer.id}:${answer}` : ''
   const voiceSettings = useAppStore((store) => store.settings?.voice)
+  const language = useAppStore(
+    (store) =>
+      store.settings?.voice?.conversationLanguage ??
+      resolveRendererUiLocale(store.settings?.uiLanguage ?? 'system')
+  )
   const input = useNativeChatVoiceInput({
     active: props.active,
     autoSend: false,
@@ -77,7 +84,8 @@ export function NativeChatVoiceConversation(
     props.working,
     props.active && running,
     voiceSettings,
-    interrupting
+    interrupting,
+    language
   )
   const canSend =
     props.active &&
@@ -98,9 +106,7 @@ export function NativeChatVoiceConversation(
   function end(): void {
     const retained = gate.current?.pendingText
     if (retained) {
-      queue.current = [queue.current, retained].filter(Boolean).join(' ')
-      setQueued(queue.current)
-      input.setDraft(queue.current)
+      enqueue(retained)
     }
     ++preparation.current
     setPreparing(false)
@@ -285,26 +291,20 @@ export function NativeChatVoiceConversation(
     }
   })
   useEffect(() => {
-    if ((running || preparing) && (!props.active || input.error || !playback.available)) {
+    if (
+      (running || preparing) &&
+      (!props.active || !input.ready || input.error || !playback.available)
+    ) {
       end()
     }
   })
 
-  const stateLabel = preparing
-    ? translate('stsLocal.preparing', 'Preparing local voice models (first download: 37 MB)…')
-    : interrupting && props.working
-      ? translate('stsLive.interrupting', 'Stopping the reply…')
-      : input.state === 'starting' && input.owned
-        ? translate('stsVoice.starting', 'Starting microphone…')
-        : sending
-          ? translate('stsVoice.sending', 'Sending…')
-          : playback.speaking
-            ? translate('stsLive.speakingListening', 'Speaking · listening for you')
-            : props.working || (awaiting && !replyFinished)
-              ? translate('stsLive.workingListening', 'Working · listening for you')
-              : input.owned
-                ? translate('stsVoice.listening', 'Listening')
-                : translate('stsVoice.ready', 'Ready')
+  const stateLabel = nativeChatVoiceStateLabel(
+    { preparing, interrupting, sending, awaiting, replyFinished },
+    props.working,
+    input,
+    playback
+  )
   return (
     <>
       <textarea

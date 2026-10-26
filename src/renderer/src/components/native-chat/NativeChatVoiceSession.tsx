@@ -1,7 +1,7 @@
+import type { ReactNode } from 'react'
 import { NativeChatVoiceConversation } from './NativeChatVoiceConversation'
+import { NativeChatVoiceLayout } from './NativeChatVoiceLayout'
 import { NativeChatVoiceSettings } from './NativeChatVoiceSettings'
-import { useNativeChatVoicePreset } from './use-native-chat-voice-preset'
-import { translate } from '@/i18n/i18n'
 import { useAppStore } from '@/store'
 import { NativeChatWorkModePicker } from './NativeChatWorkModePicker'
 import { useNativeChatWorkMode } from './use-native-chat-work-mode'
@@ -17,7 +17,8 @@ export function NativeChatVoiceSession({
   composerShown,
   install,
   hostHeld,
-  isVisible
+  isVisible,
+  history
 }: {
   controller: Pick<
     ReturnType<typeof useStructuredAgentSession>,
@@ -29,57 +30,45 @@ export function NativeChatVoiceSession({
   install: ReturnType<typeof useNativeChatInstallSlot>
   hostHeld: boolean
   isVisible: boolean
+  history: ReactNode
 }): React.JSX.Element {
-  const workMode = useNativeChatWorkMode(transport, true, 'brainstorm')
+  const workMode = useNativeChatWorkMode(transport, true)
   const voice = useAppStore((store) => store.settings?.voice)
-  const preset = useNativeChatVoicePreset(
-    transport,
-    isVisible && composerShown,
-    controller.isWorking
-  )
   return (
-    <div className="scrollbar-sleek flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-      <NativeChatVoiceSettings voice={voice} transport={transport} working={controller.isWorking} />
-      {preset.pending || preset.failed ? (
-        <p
-          role={preset.failed ? 'alert' : 'status'}
-          className="px-3 py-2 text-xs text-chat-foreground-faint"
-        >
-          {preset.failed
-            ? translate(
-                'stsLive.presetFailed',
-                'Could not apply the fast voice model. Choose a model and low reasoning above.'
-              )
-            : translate('stsLive.presetPending', 'Preparing the fast voice model…')}
-        </p>
-      ) : null}
-      <NativeChatVoiceConversation
-        active={isVisible}
-        blocked={
-          preset.pending ||
-          !composerShown ||
-          Boolean(install.unavailableHint) ||
-          stopControls.stopping ||
-          hostHeld ||
-          controller.status === 'idle' ||
-          controller.status === 'loading' ||
-          controller.status === 'error'
-        }
-        working={controller.isWorking}
-        messages={controller.messages}
-        transport={workMode.transport}
-        completedTurn={
-          controller.latestTurn?.turn.state === 'completed'
-            ? controller.latestTurn.itemId
-            : undefined
-        }
-        onStopAgent={() => stopControls.composer.onStop?.()}
-      />
-      <NativeChatWorkModePicker
-        mode={workMode.mode}
-        onChange={workMode.setMode}
-        delegation={workMode.delegation}
-      />
-    </div>
+    <NativeChatVoiceLayout history={history}>
+      <div className="scrollbar-sleek flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+        <NativeChatVoiceSettings
+          voice={voice}
+          transport={transport}
+          working={controller.isWorking}
+        />
+        <NativeChatVoiceConversation
+          active={isVisible}
+          blocked={
+            !composerShown ||
+            Boolean(install.unavailableHint) ||
+            stopControls.stopping ||
+            hostHeld ||
+            controller.status === 'idle' ||
+            controller.status === 'loading' ||
+            controller.status === 'error'
+          }
+          working={controller.isWorking}
+          messages={controller.messages}
+          transport={workMode.transport}
+          completedTurn={
+            controller.latestTurn?.turn.state === 'completed'
+              ? controller.latestTurn.itemId
+              : undefined
+          }
+          onStopAgent={() => stopControls.composer.onStop?.()}
+        />
+        <NativeChatWorkModePicker
+          mode={workMode.mode}
+          onChange={workMode.setMode}
+          delegation={workMode.delegation}
+        />
+      </div>
+    </NativeChatVoiceLayout>
   )
 }

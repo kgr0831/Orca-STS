@@ -9,5 +9,5 @@ export type VoiceSessionEntry =
 
 export const useVoiceSidebarSessions = create<{
   entries: Record<string, VoiceSessionEntry>
-  mountedTabId: string | null
-}>(() => ({ entries: {}, mountedTabId: null }))
+  portal: { tabId: string; container: HTMLElement } | null
+}>(() => ({ entries: {}, portal: null }))

@@ -3,28 +3,41 @@ import { planAgentSessionLaunch } from '@/lib/agent-session-launch-plan'
 import { worktreeLaunchWorkspace } from '@/lib/agent-launch-route-input'
 import { newAgentLaunchRequestId } from '@/lib/agent-launch-request-id'
 import { beginStructuredAgentSessionProvisionalLaunch } from '@/lib/agent-session/structured-agent-session-provisional-tab'
-import { resolveStructuredAgentSessionOwner } from '@/runtime/structured-agent-session-owner'
+import {
+  resolveStructuredAgentSessionOwner,
+  structuredAgentSessionOwnerForTab
+} from '@/runtime/structured-agent-session-owner'
 import { structuredAgentSessionTabId } from '../../../shared/structured-agent-session-projection'
 import type { ExecutionHostId } from '../../../shared/execution-host'
 import { useVoiceSidebarSessions, type VoiceSessionEntry } from './voice-sidebar-state'
 
 export function useVoiceSidebarWorkspace() {
   const worktreeId = useAppStore((s) => s.activeWorktreeId)
+  const tab = useAppStore((s) => {
+    const active = worktreeId ? s.getActiveTab(worktreeId) : null
+    return active?.contentType === 'agent-session' && active.agentSessionAgent === 'codex'
+      ? active
+      : null
+  })
   const executionHostId = useAppStore((s) =>
-    worktreeId ? resolveStructuredAgentSessionOwner(s, worktreeId) : null
+    tab
+      ? structuredAgentSessionOwnerForTab(s, tab)
+      : worktreeId
+        ? resolveStructuredAgentSessionOwner(s, worktreeId)
+        : null
   )
   const key = worktreeId && executionHostId ? JSON.stringify([executionHostId, worktreeId]) : null
   const entry = useVoiceSidebarSessions((s) => (key ? s.entries[key] : undefined))
-  return { worktreeId, executionHostId, key, entry }
+  return { worktreeId, executionHostId, key, entry, tab }
 }
 
-export async function openVoiceSidebarSession(
+export async function createVoiceSidebarSession(
   key: string,
   worktreeId: string,
   executionHostId: ExecutionHostId
 ): Promise<void> {
   const existing = useVoiceSidebarSessions.getState().entries[key]
-  if (existing && existing.status !== 'failed') {
+  if (existing?.status === 'opening') {
     return
   }
   const update = (entry: VoiceSessionEntry) =>
@@ -42,8 +55,8 @@ export async function openVoiceSidebarSession(
     })
     const launch = beginStructuredAgentSessionProvisionalLaunch({
       plan,
-      activate: false,
-      hooks: { activate: false }
+      activate: true,
+      hooks: { activate: true }
     })
     const result = await launch?.settlement
     if (result?.kind === 'structured' || result?.kind === 'visibility-unknown') {

@@ -24,7 +24,6 @@ export class ElevenLabsTranscriptionSession {
       const url = new URL('wss://api.elevenlabs.io/v1/speech-to-text/realtime')
       url.searchParams.set('model_id', 'scribe_v2_realtime')
       url.searchParams.set('audio_format', 'pcm_16000')
-      url.searchParams.set('language_code', 'ko')
       url.searchParams.set('keepalive_interval_ms', '5000')
       url.searchParams.set('commit_strategy', 'vad')
       url.searchParams.set('vad_silence_threshold_secs', '1.2')

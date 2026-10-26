@@ -24,7 +24,8 @@ it('holds arriving replies during capture without marking their audio as already
   )
   const initial: { messages: NativeChatMessage[]; paused: boolean } = { messages: [], paused: true }
   const hook = renderHook(
-    ({ messages, paused }) => useNativeChatVoicePlayback(messages, false, true, undefined, paused),
+    ({ messages, paused }) =>
+      useNativeChatVoicePlayback(messages, false, true, undefined, paused, 'ko'),
     { initialProps: initial }
   )
   const messages: NativeChatMessage[] = [

@@ -9,7 +9,10 @@ import { useNativeChatVoiceInput } from './use-native-chat-voice-input'
 const { store } = vi.hoisted(() => ({
   store: {
     dictationState: 'idle',
-    settings: { voice: { enabled: true, sttModel: 'zipformer-streaming-korean' } }
+    settings: {
+      uiLanguage: 'ko' as const,
+      voice: { enabled: true, sttModel: 'zipformer-streaming-korean' }
+    }
   }
 }))
 

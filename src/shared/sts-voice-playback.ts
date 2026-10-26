@@ -1,9 +1,17 @@
 import type { NativeChatMessage } from './native-chat-types'
 
-export function localKoreanVoice<T extends { localService: boolean; lang: string }>(
-  voices: readonly T[]
-): T | undefined {
-  return voices.find((voice) => voice.localService && /^ko(?:[-_]|$)/i.test(voice.lang))
+export function localVoiceForLanguage<
+  T extends { localService: boolean; lang: string; voiceURI?: string }
+>(voices: readonly T[], language: string, preferredUri?: string): T | undefined {
+  const tag = language.toLowerCase().replaceAll('_', '-')
+  const local = voices.filter(
+    (voice) => voice.localService && voice.lang.toLowerCase().split(/[-_]/)[0] === tag.split('-')[0]
+  )
+  return (
+    (preferredUri ? local.find((voice) => voice.voiceURI === preferredUri) : undefined) ??
+    local.find((voice) => voice.lang.toLowerCase().replaceAll('_', '-') === tag) ??
+    local.find((voice) => voice.lang.toLowerCase().split(/[-_]/)[0] === tag.split('-')[0])
+  )
 }
 
 export function voiceMessageText(message: NativeChatMessage): string {

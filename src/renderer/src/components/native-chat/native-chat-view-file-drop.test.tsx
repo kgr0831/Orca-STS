@@ -29,7 +29,7 @@ vi.mock('./NativeChatStructuredSession', () => ({
 
 afterEach(() => {
   cleanup()
-  useVoiceSidebarSessions.setState({ mountedTabId: null })
+  useVoiceSidebarSessions.setState({ portal: null })
 })
 
 it('owns pane drops for standalone structured sessions without a terminal portal', () => {
@@ -56,7 +56,7 @@ it('owns pane drops for standalone structured sessions without a terminal portal
   expect(container.querySelector('[data-native-chat-drop-overlay]')).toBeNull()
 })
 
-it('gives the sidebar exclusive ownership of its chat and restores the full tab when it closes', () => {
+it('keeps the current chat mounted while its voice sidebar opens and closes', () => {
   const props: NativeChatStructuredViewProps = {
     mode: 'structured',
     tabId: 'voice-tab',
@@ -66,15 +66,14 @@ it('gives the sidebar exclusive ownership of its chat and restores the full tab 
     isVisible: true,
     isFocusedGroup: true
   }
-  const view = render(<NativeChatView {...props} />)
-  expect(screen.queryByTestId('transcript')).not.toBeNull()
-  act(() => useVoiceSidebarSessions.setState({ mountedTabId: props.tabId }))
-  expect(screen.queryByTestId('transcript')).toBeNull()
-  const sidebarProps: NativeChatStructuredViewProps = { ...props, presentation: 'voice-sidebar' }
-  view.rerender(<NativeChatView {...sidebarProps} />)
-  expect(screen.queryByTestId('transcript')).not.toBeNull()
-  view.rerender(<NativeChatView {...props} />)
-  expect(screen.queryByTestId('transcript')).toBeNull()
-  act(() => useVoiceSidebarSessions.setState({ mountedTabId: null }))
-  expect(screen.queryByTestId('transcript')).not.toBeNull()
+  render(<NativeChatView {...props} />)
+  const transcript = screen.getByTestId('transcript')
+  act(() =>
+    useVoiceSidebarSessions.setState({
+      portal: { tabId: props.tabId, container: document.createElement('div') }
+    })
+  )
+  expect(screen.getByTestId('transcript')).toBe(transcript)
+  act(() => useVoiceSidebarSessions.setState({ portal: null }))
+  expect(screen.getByTestId('transcript')).toBe(transcript)
 })

@@ -344,7 +344,7 @@ export function ElevenLabsVoiceSettings({
           <p className="text-xs text-muted-foreground">
             {translate(
               'elevenLabsVoice.tone',
-              'Calm, clear delivery with a slightly slower pace. Preview a Korean voice from your account before selecting it.'
+              'Calm, clear delivery with a slightly slower pace. Preview a voice in your language before selecting it.'
             )}
           </p>
         </div>

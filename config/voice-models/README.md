@@ -1,13 +1,27 @@
 # Local voice turn models
 
 The desktop voice panel uses Smart Turn v3.2 for audio end-of-turn detection and a
-quantized multilingual MiniLM encoder with locally fitted linear heads for Korean
+quantized multilingual MiniLM encoder with locally fitted linear heads for English, Chinese, Korean, Japanese, Spanish, French and Portuguese
 overlap intent and whether the assistant expects an answer. Runtime intent
 classification has no acknowledgment/stop keyword list or Korean suffix regex.
 Confidence thresholds, scheduling and cancellation fences remain application logic.
 
+Voice attaches to the selected Codex chat and shares its session, model, permissions,
+and transcript. Opening the sidebar never creates a session; **New chat** is explicit.
+The history tab leaves capture mounted. No raw audio recording is saved.
+
+Settings let users follow the app language or choose any built-in Orca language.
+The model picker can show only matching live models, with the existing download and
+credential flows. Local streaming recognition currently covers English, Chinese and
+Korean; Scribe Realtime automatically detects all seven languages. Batch recognizers
+remain available for dictation, but are not offered for continuous conversation.
+Local playback uses a selected installed system voice in the conversation language;
+users can install voices through their OS and refresh the list. If the OS exposes no
+matching voice to Electron, configure ElevenLabs output instead. Providers never
+switch automatically. Cloud recognition and speech incur the provider's account costs.
+
 This is experimental. The intent examples are authored synthetic text, not a
-representative Korean speech corpus. `evaluation.json` is a development report,
+representative multilingual speech corpus. `evaluation.json` is a development report,
 not independent accuracy: its examples were inspected while fitting the heads.
 The text classifier depends on STT preserving question marks and words; it cannot
 reconstruct an interrogative intonation omitted by STT. Smart Turn sees audio but
@@ -50,7 +64,7 @@ ORCA_BACKGROUND_LAUNCH=1 node config/voice-models/smoke.mjs <verified-model-dire
 
 Training uses the frozen encoder on CPU and deterministic softmax regression.
 Weights are checked in; training is not performed in the app. The browser smoke
-check runs the actual bundled worker offline, checks Korean intent/context cases,
+check runs the actual bundled worker offline, checks multilingual intent/context cases,
 checks endpoint execution on synthetic audio, and rejects external requests.
 It does not measure microphone recognition or natural conversation accuracy.
 

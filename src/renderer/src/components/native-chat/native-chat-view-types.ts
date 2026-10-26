@@ -25,7 +25,6 @@ export type NativeChatBridgeViewProps = {
 
 export type NativeChatStructuredViewProps = {
   mode: 'structured'
-  presentation?: 'voice-sidebar'
   tabId: string
   groupId?: string
   sessionId: string
