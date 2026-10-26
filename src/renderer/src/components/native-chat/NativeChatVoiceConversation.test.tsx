@@ -30,7 +30,7 @@ const fake = vi.hoisted(() => ({
     stop: vi.fn(),
     restart: vi.fn()
   },
-  capture: { onReady: (_text: string) => {} }
+  capture: { onTranscript: (_text: string, _final: boolean) => {}, onCaptureEnded: () => {} }
 }))
 vi.mock('./use-native-chat-voice-input', () => ({
   useNativeChatVoiceInput: (args: typeof fake.capture) => {
@@ -113,65 +113,75 @@ function setup(outcome: 'recorded' | 'unconfirmed' = 'recorded') {
     view.rerender(<NativeChatVoiceConversation {...props} />)
   }
   const submit = () => {
-    fake.input.owned = false
-    fake.input.state = 'idle'
-    fake.input.draft = '아이디어를 비교해 줘'
-    act(() => fake.capture.onReady(fake.input.draft))
+    act(() => {
+      fake.capture.onTranscript('아이디어를 비교해 줘', true)
+      vi.advanceTimersByTime(250)
+    })
   }
   fireEvent.click(screen.getByRole('button', { name: 'Start voice conversation' }))
   return { ...view, props, update, submit, send }
 }
 
 describe('continuous sidebar conversation', () => {
-  it('rearms after a completed tool-only turn even without a visible working frame', () => {
-    const { submit, update } = setup()
+  it('keeps the same capture through sending, tool work, playback and completion', () => {
+    const { submit, update, send } = setup()
     submit()
-    update({ completedTurn: 'completed-tool-turn' })
-    act(() => vi.advanceTimersByTime(500))
-    expect(fake.input.start).toHaveBeenCalledTimes(2)
-  })
-  it('waits for a reply and its audio, then rearms even when a fast turn never renders working', () => {
-    const { update, submit, send } = setup()
-    submit()
-    act(() => vi.advanceTimersByTime(2000))
+    update({ working: true })
+    fake.playback.speaking = true
+    update()
+    fake.playback.speaking = false
+    update({ working: false, completedTurn: 'done' })
+    act(() => vi.advanceTimersByTime(5000))
     expect(send).toHaveBeenCalledTimes(1)
     expect(fake.input.start).toHaveBeenCalledTimes(1)
-    fake.playback.pending = true
+    expect(fake.input.cancel).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'End voice conversation' })).toBeTruthy()
+  })
+
+  it('keeps acknowledgments out of the agent and waits for stop before sending a real interruption', () => {
+    const { update, submit, props, send } = setup()
+    submit()
+    update({ working: true })
+    fake.playback.speaking = true
+    update()
+    act(() => {
+      fake.capture.onTranscript('응 그래 그렇지', false)
+      fake.capture.onTranscript('응 그래 그렇지', true)
+      vi.advanceTimersByTime(1000)
+    })
+    expect(props.onStopAgent).not.toHaveBeenCalled()
+    expect(send).toHaveBeenCalledTimes(1)
+    act(() => {
+      fake.capture.onTranscript('잠깐 그 파일부터 고쳐줘', true)
+      vi.advanceTimersByTime(250)
+    })
+    expect(props.onStopAgent).toHaveBeenCalledTimes(1)
+    expect(send).toHaveBeenCalledTimes(1)
+    fake.playback.speaking = false
+    update({ working: false, completedTurn: 'interrupted' })
+    expect(send.mock.lastCall?.[0]).toBe('잠깐 그 파일부터 고쳐줘')
+    expect(fake.input.start).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders partial user captions and streamed assistant text while audio plays', () => {
+    const { update } = setup()
+    act(() => fake.capture.onTranscript('인식하는 중간 문장', false))
+    expect(screen.getByText('인식하는 중간 문장')).toBeTruthy()
+    fake.playback.speaking = true
+    fake.playback.caption = '첫 문장'
     update({
+      working: true,
       messages: [
         {
           id: 'answer',
           role: 'assistant',
           source: 'transcript',
           timestamp: 1,
-          blocks: [{ type: 'text', text: '두 가지 방향이 있어요.' }]
+          blocks: [{ type: 'text', text: '첫 문장에 이어 지금 생성되는 문장' }]
         }
       ]
     })
-    act(() => vi.advanceTimersByTime(1000))
-    expect(fake.input.start).toHaveBeenCalledTimes(1)
-    fake.playback.pending = false
-    fake.playback.speaking = true
-    update()
-    act(() => vi.advanceTimersByTime(1000))
-    expect(fake.input.start).toHaveBeenCalledTimes(1)
-    fake.playback.speaking = false
-    update()
-    act(() => vi.advanceTimersByTime(500))
-    expect(fake.input.start).toHaveBeenCalledTimes(2)
-  })
-
-  it('waits for agent stop before listening after an interruption', () => {
-    const { update, submit, props } = setup()
-    submit()
-    update({ working: true })
-    fireEvent.click(screen.getByRole('button', { name: 'Interrupt and speak' }))
-    expect(props.onStopAgent).toHaveBeenCalledTimes(1)
-    act(() => vi.advanceTimersByTime(1000))
-    expect(fake.input.start).toHaveBeenCalledTimes(1)
-    update({ working: false })
-    act(() => vi.advanceTimersByTime(500))
-    expect(fake.input.start).toHaveBeenCalledTimes(2)
+    expect(screen.getByText('첫 문장에 이어 지금 생성되는 문장')).toBeTruthy()
   })
 
   it('preserves unconfirmed words and never retries or restarts automatically', () => {
@@ -184,13 +194,51 @@ describe('continuous sidebar conversation', () => {
     expect(fake.input.start).toHaveBeenCalledTimes(1)
   })
 
-  it('ends the loop on blur and ignores a late final result', () => {
+  it('keeps the conversation alive when another window takes focus', () => {
     const { send } = setup()
     fireEvent(window, new Event('blur'))
-    act(() => fake.capture.onReady('late words'))
-    act(() => vi.advanceTimersByTime(1000))
+    fireEvent(document, new Event('visibilitychange'))
+    act(() => {
+      fake.capture.onTranscript('계속 들어줘', true)
+      vi.advanceTimersByTime(250)
+    })
+    expect(fake.input.cancel).not.toHaveBeenCalled()
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('button', { name: 'End voice conversation' })).toBeTruthy()
+  })
+
+  it('ends only on explicit end and ignores pending or late recognition', () => {
+    const { send } = setup()
+    act(() => fake.capture.onTranscript('아직 보내지 않은 문장', true))
+    fireEvent.click(screen.getByRole('button', { name: 'End voice conversation' }))
+    act(() => {
+      fake.capture.onTranscript('늦은 결과', true)
+      vi.advanceTimersByTime(5000)
+    })
     expect(fake.input.cancel).toHaveBeenCalled()
     expect(send).not.toHaveBeenCalled()
-    expect(fake.input.start).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('button', { name: 'Start voice conversation' })).toBeTruthy()
+  })
+
+  it('explains an actual capture loss rather than silently returning to Start', () => {
+    setup()
+    act(() => fake.capture.onCaptureEnded())
+    expect(screen.getByRole('alert').textContent).toContain('Microphone capture ended')
+  })
+
+  it('keeps listening after a playback error and during a temporary send block', () => {
+    const { update, send } = setup()
+    fake.playback.error = true
+    update({ blocked: true })
+    act(() => {
+      fake.capture.onTranscript('계속 이야기하자', true)
+      vi.advanceTimersByTime(250)
+    })
+    expect(screen.getByRole('alert').textContent).toContain('Listening continues')
+    expect(screen.getByRole('button', { name: 'End voice conversation' })).toBeTruthy()
+    expect(fake.input.cancel).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
+    update({ blocked: false })
+    expect(send.mock.lastCall?.[0]).toBe('계속 이야기하자')
   })
 })

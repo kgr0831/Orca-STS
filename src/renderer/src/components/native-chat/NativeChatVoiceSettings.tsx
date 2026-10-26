@@ -35,7 +35,7 @@ export function NativeChatVoiceSettings({
       <p className="text-xs text-chat-foreground-faint">
         {translate(
           'stsLive.effortHint',
-          'Lower reasoning effort reduces reply wait time. MAS keeps its separate specialist setting.'
+          'Voice starts with Luna / low, or Sol / low when Luna is unavailable. MAS prefers Astra for difficult work.'
         )}
       </p>
     </div>

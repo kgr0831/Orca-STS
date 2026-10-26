@@ -48,7 +48,7 @@ export function NativeChatVoicePanel(props: NativeChatVoicePanelProps): React.JS
         <p className="text-center text-xs text-muted-foreground">
           {translate(
             'stsLive.hint',
-            'Speak naturally. Replies play aloud, then listening resumes.'
+            'Listening stays on until you end the conversation. Acknowledgments let the reply continue; a new question or “stop” interrupts.'
           )}
         </p>
         <Button

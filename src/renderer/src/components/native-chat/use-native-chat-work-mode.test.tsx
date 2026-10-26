@@ -96,6 +96,7 @@ describe('the Codex work mode composer', () => {
           currentValue: 'conversation-model',
           choices: [
             { value: 'conversation-model', label: 'Conversation' },
+            { value: 'gpt-6-astra', label: 'GPT-6 Astra' },
             { value: 'gpt-6.1-sol', label: 'GPT-6.1 Sol' }
           ]
         },
@@ -109,9 +110,9 @@ describe('the Codex work mode composer', () => {
     act(() => result.current.setMode('brainstorm'))
     expect(demand).toHaveBeenCalledOnce()
     expect(send).not.toHaveBeenCalled()
-    expect(result.current.delegation.automaticModel).toBe('gpt-6.1-sol')
+    expect(result.current.delegation.automaticModel).toBe('gpt-6-astra')
     result.current.transport.send('복잡한 구조를 분석해줘', [])
-    expect(send.mock.lastCall?.[0]).toContain('"model":"gpt-6.1-sol"')
+    expect(send.mock.lastCall?.[0]).toContain('"model":"gpt-6-astra"')
     expect(transport.optionsSurface.setOption).not.toHaveBeenCalled()
   })
 

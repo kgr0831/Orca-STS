@@ -8,7 +8,6 @@ export class ElevenLabsTranscriptionSession {
   private closed = false
   private finishing = false
   private dirty = false
-  private seconds = 0
   private readyResolve: (() => void) | null = null
   private readyReject: ((error: Error) => void) | null = null
   private finishResolve: (() => void) | null = null
@@ -25,6 +24,8 @@ export class ElevenLabsTranscriptionSession {
       const url = new URL('wss://api.elevenlabs.io/v1/speech-to-text/realtime')
       url.searchParams.set('model_id', 'scribe_v2_realtime')
       url.searchParams.set('audio_format', 'pcm_16000')
+      url.searchParams.set('language_code', 'ko')
+      url.searchParams.set('keepalive_interval_ms', '5000')
       url.searchParams.set('commit_strategy', 'vad')
       url.searchParams.set('vad_silence_threshold_secs', '1.2')
       this.startTimer = setTimeout(() => this.fail('elevenlabs_connection_timeout'), 15_000)
@@ -72,9 +73,7 @@ export class ElevenLabsTranscriptionSession {
       if (!this.ready || !('text' in data) || typeof data.text !== 'string') {
         return
       }
-      if (data.text.trim()) {
-        this.resetIdleTimer()
-      }
+      this.resetIdleTimer()
       if (kind === 'committed_transcript') {
         this.dirty = false
         if (data.text.trim()) {
@@ -99,7 +98,7 @@ export class ElevenLabsTranscriptionSession {
     if (this.idleTimer) {
       clearTimeout(this.idleTimer)
     }
-    this.idleTimer = setTimeout(() => this.fail('elevenlabs_speech_idle_timeout'), 60_000)
+    this.idleTimer = setTimeout(() => this.fail('elevenlabs_connection_timeout'), 30_000)
   }
 
   feedAudio(samples: Float32Array, sampleRate: number): void {
@@ -116,11 +115,6 @@ export class ElevenLabsTranscriptionSession {
       return
     }
     const normalized = resampleToRate(samples, sampleRate, 16000)
-    this.seconds += normalized.length / 16000
-    if (this.seconds > 600) {
-      this.fail('elevenlabs_session_time_limit')
-      return
-    }
     if (!normalized.length) {
       return
     }

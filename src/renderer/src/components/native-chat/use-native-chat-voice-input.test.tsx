@@ -25,12 +25,18 @@ afterEach(() => {
   store.settings.voice.sttModel = 'zipformer-streaming-korean'
 })
 
-function setup() {
+function setup(onTranscript?: (text: string, final: boolean) => void) {
   const onReady = vi.fn()
   const beforeStart = vi.fn()
   const hook = renderHook(
     ({ active }) =>
-      useNativeChatVoiceInput({ active, autoSend: true, onReady, onBeforeStart: beforeStart }),
+      useNativeChatVoiceInput({
+        active,
+        autoSend: true,
+        onReady,
+        onBeforeStart: beforeStart,
+        onTranscript
+      }),
     { initialProps: { active: false } }
   )
   const element = document.createElement('textarea')
@@ -60,6 +66,35 @@ function setup() {
 }
 
 describe('voice capture ownership', () => {
+  it('streams partials and successive commits without closing or restarting capture', () => {
+    const onTranscript = vi.fn()
+    const { result, target, onReady, unmount } = setup(onTranscript)
+    act(() => {
+      result.current.start()
+    })
+    act(() => target.onPartial('첫 중간 자막'))
+    expect(result.current.partial).toBe('첫 중간 자막')
+    act(() => {
+      target.onFinal('첫 문장')
+      target.onPartial('다음 중간 자막')
+      target.onFinal('다음 문장')
+    })
+    expect(onTranscript.mock.calls).toEqual([
+      ['첫 중간 자막', false],
+      ['첫 문장', true],
+      ['다음 중간 자막', false],
+      ['다음 문장', true]
+    ])
+    expect(store.dictationState).toBe('listening')
+    expect(onReady).not.toHaveBeenCalled()
+    expect(result.current.owned).toBe(true)
+    act(() => {
+      result.current.cancel()
+      target.onFinal('늦은 결과')
+    })
+    expect(onTranscript).toHaveBeenCalledTimes(4)
+    unmount()
+  })
   it('starts in the sidebar without moving focus away from the terminal', () => {
     const { result, unmount } = setup()
     const terminal = document.createElement('textarea')
