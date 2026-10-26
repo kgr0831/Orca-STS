@@ -16,14 +16,16 @@ function fixture(initial: StsTurnOutput | null = { text: '설명 중입니다.' 
   const interrupt = vi.fn(),
     utterance = vi.fn(),
     caption = vi.fn(),
-    error = vi.fn()
+    error = vi.fn(),
+    holdOutput = vi.fn()
   const gate = new StsModelTurnTaking({
     output: () => output,
     predict,
     interrupt,
     utterance,
     caption,
-    error
+    error,
+    holdOutput
   })
   return {
     gate,
@@ -32,6 +34,7 @@ function fixture(initial: StsTurnOutput | null = { text: '설명 중입니다.' 
     utterance,
     caption,
     error,
+    holdOutput,
     end: () => {
       output = null
       gate.outputEnded()
@@ -163,4 +166,81 @@ it('honors a confident stop without sending it, and closing invalidates late res
   f.gate.close()
   await vi.advanceTimersByTimeAsync(5000)
   expect(f.utterance).not.toHaveBeenCalled()
+})
+
+it('holds output before inference, resumes acknowledgments, and does not debounce away evolving speech', async () => {
+  const f = fixture()
+  f.predict.mockResolvedValueOnce({
+    intent: 'backchannel',
+    confidence: 0.99,
+    expectsAnswer: false,
+    complete: 0
+  })
+  f.gate.receive('yes', false)
+  expect(f.holdOutput).toHaveBeenLastCalledWith(true)
+  expect(f.predict).not.toHaveBeenCalled()
+  await vi.advanceTimersByTimeAsync(120)
+  expect(f.holdOutput).toHaveBeenLastCalledWith(false)
+  expect(f.interrupt).not.toHaveBeenCalled()
+  f.gate.receive('wait', false)
+  await vi.advanceTimersByTimeAsync(80)
+  f.gate.receive('wait I need', false)
+  await vi.advanceTimersByTimeAsync(40)
+  expect(f.predict).toHaveBeenLastCalledWith('wait I need', '설명 중입니다.', false)
+  expect(f.interrupt).toHaveBeenCalledOnce()
+})
+
+it('serializes slow predictions and coalesces partials without losing the final commit', async () => {
+  const f = fixture(null)
+  let resolve: (value: StsTurnPrediction) => void = () => {}
+  f.predict.mockImplementationOnce(
+    () =>
+      new Promise((done) => {
+        resolve = done
+      })
+  )
+  f.gate.receive('first', false)
+  await vi.advanceTimersByTimeAsync(120)
+  for (let i = 0; i < 8; i++) {
+    f.gate.receive(`first ${i}`, false)
+    await vi.advanceTimersByTimeAsync(120)
+  }
+  f.gate.receive('first complete sentence', true)
+  expect(f.predict).toHaveBeenCalledOnce()
+  resolve({ intent: 'speech', confidence: 0.99, expectsAnswer: false, complete: 0 })
+  await vi.advanceTimersByTimeAsync(1)
+  expect(f.predict).toHaveBeenCalledTimes(2)
+  expect(f.utterance).toHaveBeenCalledExactlyOnceWith('first complete sentence')
+})
+
+it('finishes a committed utterance after bounded silence even when the endpoint model keeps deferring', async () => {
+  const f = fixture(null)
+  f.predict.mockResolvedValue({
+    intent: 'speech',
+    confidence: 0.99,
+    expectsAnswer: false,
+    complete: 0.1
+  })
+  f.gate.receive('Please explain this function', true)
+  await vi.advanceTimersByTimeAsync(2401)
+  expect(f.utterance).toHaveBeenCalledExactlyOnceWith('Please explain this function')
+  expect(vi.getTimerCount()).toBe(0)
+})
+
+it('retains a committed segment when new speech arrives before its slow prediction completes', async () => {
+  const f = fixture(null)
+  let resolve: (value: StsTurnPrediction) => void = () => {}
+  f.predict.mockImplementationOnce(
+    () =>
+      new Promise((done) => {
+        resolve = done
+      })
+  )
+  f.gate.receive('First committed segment.', true)
+  await vi.advanceTimersByTimeAsync(1)
+  f.gate.receive('Next segment.', true)
+  expect(f.gate.pendingText).toBe('First committed segment. Next segment.')
+  resolve({ intent: 'speech', confidence: 0.99, expectsAnswer: false, complete: 0.99 })
+  await vi.advanceTimersByTimeAsync(1)
+  expect(f.utterance).toHaveBeenCalledExactlyOnceWith('First committed segment. Next segment.')
 })

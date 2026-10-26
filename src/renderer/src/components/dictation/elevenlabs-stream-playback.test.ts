@@ -72,6 +72,25 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('streaming ElevenLabs playback', () => {
+  it('fails a suspended audio start after a bounded wait without making a paid request', async () => {
+    vi.useFakeTimers()
+    const error = vi.fn()
+    vi.stubGlobal(
+      'AudioContext',
+      class extends TestContext {
+        override resume = vi.fn(() => new Promise<void>(() => {}))
+      }
+    )
+    try {
+      playElevenLabsStream(request, vi.fn(), error)
+      await vi.advanceTimersByTimeAsync(3000)
+      expect(error).toHaveBeenCalledOnce()
+      expect(stream).not.toHaveBeenCalled()
+      expect(TestContext.instances[0].close).toHaveBeenCalledOnce()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
   it('plays before completion, joins split PCM samples and finishes after the last audio', async () => {
     const end = vi.fn()
     const error = vi.fn()

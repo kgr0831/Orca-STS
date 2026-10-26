@@ -9,6 +9,9 @@ const sockets = vi.hoisted(
       terminated: boolean
       url: URL
       receive: (value: unknown) => void
+      disconnect: () => void
+      sendCallbacks: ((error?: Error) => void)[]
+      delaySends: boolean
     }[]
   } => ({ items: [] })
 )
@@ -22,13 +25,18 @@ vi.mock('ws', async () => {
       bufferedAmount = 0
       sent: { commit?: boolean; audio_base_64?: string }[] = []
       terminated = false
+      sendCallbacks: ((error?: Error) => void)[] = []
+      delaySends = false
       constructor(readonly url: URL) {
         super()
         sockets.items.push(this)
       }
-      send(value: string, callback: () => void): void {
+      send(value: string, callback: (error?: Error) => void): void {
         this.sent.push(JSON.parse(value))
-        callback()
+        this.sendCallbacks.push(callback)
+        if (!this.delaySends) {
+          callback()
+        }
       }
       terminate(): void {
         this.terminated = true
@@ -37,6 +45,9 @@ vi.mock('ws', async () => {
       }
       receive(value: unknown): void {
         this.emit('message', Buffer.from(JSON.stringify(value)))
+      }
+      disconnect(): void {
+        this.emit('close')
       }
     }
   }
@@ -136,7 +147,89 @@ describe('ElevenLabs realtime dictation lifetime', () => {
     expect(events.some((event) => event.type === 'error')).toBe(false)
     await vi.advanceTimersByTimeAsync(30_000)
     expect(socket.terminated).toBe(true)
-    expect(events.at(-1)).toEqual({ type: 'error', error: 'elevenlabs_connection_timeout' })
+    expect(events.some((event) => event.type === 'error')).toBe(false)
+    await vi.advanceTimersByTimeAsync(250)
+    const recovered = sockets.items[1]
+    recovered.receive({ message_type: 'session_started' })
+    recovered.receive({ message_type: 'committed_transcript', text: 'still here' })
+    expect(events.at(-1)).toEqual({ type: 'final', text: 'still here ' })
+    await session.finish()
+  })
+
+  it('reconnects transient failures without replaying a completed transcript or accepting old socket events', async () => {
+    const { session, socket, events } = await start()
+    socket.receive({ message_type: 'committed_transcript', text: 'first turn' })
+    socket.disconnect()
+    await vi.advanceTimersByTimeAsync(250)
+    const recovered = sockets.items[1]
+    recovered.receive({ message_type: 'session_started' })
+    socket.receive({ message_type: 'committed_transcript', text: 'late old text' })
+    recovered.receive({ message_type: 'partial_transcript', text: 'next' })
+    recovered.receive({ message_type: 'partial_transcript', text: 'next' })
+    recovered.receive({ message_type: 'committed_transcript', text: 'next turn' })
+    expect(events).toEqual([
+      { type: 'final', text: 'first turn ' },
+      { type: 'partial', text: 'next' },
+      { type: 'final', text: 'next turn ' }
+    ])
+    expect(recovered.sent).toEqual([])
+    await session.finish()
+  })
+
+  it('bounds repeated reconnect failures and emits one terminal error', async () => {
+    const { session, socket, events } = await start()
+    socket.disconnect()
+    for (const delay of [250, 500, 1000]) {
+      await vi.advanceTimersByTimeAsync(delay)
+      sockets.items.at(-1)?.disconnect()
+    }
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(sockets.items).toHaveLength(4)
+    expect(events).toEqual([{ type: 'error', error: 'elevenlabs_connection_closed' }])
+    await session.finish()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('ignores delayed send failures from a retired socket', async () => {
+    const { session, socket, events } = await start()
+    socket.delaySends = true
+    session.feedAudio(new Float32Array([0.25]), 16000)
+    socket.disconnect()
+    await vi.advanceTimersByTimeAsync(250)
+    const recovered = sockets.items[1]
+    recovered.receive({ message_type: 'session_started' })
+    socket.sendCallbacks[0](new Error('retired socket'))
+    recovered.receive({ message_type: 'committed_transcript', text: 'recovered' })
+    expect(recovered.terminated).toBe(false)
+    expect(events).toEqual([{ type: 'final', text: 'recovered ' }])
+    await session.finish()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('cancels pending recovery when the user ends capture', async () => {
+    const { session, socket, events } = await start()
+    socket.disconnect()
+    await session.finish()
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(sockets.items).toHaveLength(1)
+    expect(events).toEqual([])
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('buffers only newly captured audio during recovery and never resends old audio', async () => {
+    const { session, socket } = await start()
+    session.feedAudio(new Float32Array([0.25]), 16000)
+    socket.disconnect()
+    session.feedAudio(new Float32Array([0.5]), 16000)
+    await vi.advanceTimersByTimeAsync(250)
+    const recovered = sockets.items[1]
+    expect(recovered.sent).toEqual([])
+    recovered.receive({ message_type: 'session_started' })
+    expect(recovered.sent).toHaveLength(1)
+    const pcm = Buffer.from(recovered.sent[0].audio_base_64 ?? '', 'base64')
+    expect(pcm.length).toBe(2)
+    expect(pcm.readInt16LE(0)).toBe(16384)
+    recovered.receive({ message_type: 'committed_transcript', text: 'new words' })
     await session.finish()
   })
 })

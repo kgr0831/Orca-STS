@@ -5,7 +5,7 @@ import type { NativeChatMessage } from '../../../../shared/native-chat-types'
 import { voiceMessageText } from '../../../../shared/sts-voice-playback'
 import { resolveRendererUiLocale } from '../../../../shared/ui-locale'
 import { StsModelTurnTaking } from '../../../../shared/sts-model-turn-taking'
-import { StsLocalModelClient } from './sts-local-model-client'
+import { useNativeChatVoiceModels } from './use-native-chat-voice-models'
 import type { NativeChatStructuredComposerTransport } from './native-chat-composer-types'
 import { completeNativeChatStructuredUserAction } from './native-chat-structured-user-action'
 import { useNativeChatVoiceInput } from './use-native-chat-voice-input'
@@ -20,17 +20,16 @@ export type NativeChatVoiceConversationProps = {
   messages: readonly NativeChatMessage[]
   completedTurn?: string
   transport: NativeChatStructuredComposerTransport
-  onStopAgent: () => void
+  onStopAgent: () => boolean | void
 }
 
 export function NativeChatVoiceConversation(
   props: NativeChatVoiceConversationProps
 ): React.JSX.Element {
   const [running, setRunning] = useState(false)
-  const [preparing, setPreparing] = useState(false)
+  const models = useNativeChatVoiceModels()
+  const preparing = models.preparing
   const [pendingSpeech, setPendingSpeech] = useState(false)
-  const preparation = useRef(0)
-  const models = useRef<StsLocalModelClient | null>(null)
   const [sending, setSending] = useState(false)
   const [awaiting, setAwaiting] = useState(false)
   const [interrupting, setInterrupting] = useState(false)
@@ -42,6 +41,7 @@ export function NativeChatVoiceConversation(
   const mounted = useRef(true)
   const sendInFlight = useRef(false)
   const workSeen = useRef(false)
+  const stopRequested = useRef(false)
   const replyBaseline = useRef('')
   const turnBaseline = useRef<string | undefined>(undefined)
   const gate = useRef<StsModelTurnTaking | null>(null)
@@ -61,7 +61,7 @@ export function NativeChatVoiceConversation(
     onBeforeStart: () => setNotice(''),
     onAudio: (samples, rate) => {
       if (runningRef.current) {
-        models.current?.feed(samples, rate)
+        models.feed(samples, rate)
       }
     },
     onTranscript: (text, final) => {
@@ -108,10 +108,7 @@ export function NativeChatVoiceConversation(
     if (retained) {
       enqueue(retained)
     }
-    ++preparation.current
-    setPreparing(false)
-    models.current?.close()
-    models.current = null
+    models.close()
     runningRef.current = false
     setRunning(false)
     setAwaiting(false)
@@ -124,8 +121,9 @@ export function NativeChatVoiceConversation(
   function interrupt(): void {
     playback.stop()
     setInterrupting(true)
+    stopRequested.current = false
     if (props.working || awaiting || sendInFlight.current) {
-      props.onStopAgent()
+      stopRequested.current = props.onStopAgent() !== false
     }
   }
 
@@ -210,18 +208,19 @@ export function NativeChatVoiceConversation(
   const callbacks = useRef({
     interrupt,
     enqueue,
+    hold: playback.hold,
     outputActive,
     playbackText: playback.speaking ? playback.caption : ''
   })
   callbacks.current = {
     interrupt,
     enqueue,
+    hold: playback.hold,
     outputActive,
     playbackText: playback.speaking ? playback.caption : ''
   }
   useEffect(() => {
     mounted.current = true
-    ++preparation.current
     gate.current = new StsModelTurnTaking({
       output: () =>
         callbacks.current.outputActive
@@ -229,12 +228,7 @@ export function NativeChatVoiceConversation(
               text: callbacks.current.playbackText
             }
           : null,
-      predict: (text, output, final) => {
-        if (!models.current) {
-          return Promise.reject(new Error('turn_model_unavailable'))
-        }
-        return models.current.predict(text, output, final)
-      },
+      predict: models.predict,
       error: () =>
         setNotice(
           translate(
@@ -254,7 +248,8 @@ export function NativeChatVoiceConversation(
           setPendingSpeech(value)
         }
       },
-      clearAudio: () => models.current?.resetAudio(),
+      clearAudio: models.resetAudio,
+      holdOutput: (held) => callbacks.current.hold(held),
       interrupt: () => {
         if (runningRef.current) {
           callbacks.current.interrupt()
@@ -270,11 +265,9 @@ export function NativeChatVoiceConversation(
     return () => {
       mounted.current = false
       runningRef.current = false
-      models.current?.close()
-      models.current = null
       gate.current?.close()
     }
-  }, [])
+  }, [models.predict, models.resetAudio])
   useEffect(() => {
     if (props.working && (awaiting || sending)) {
       workSeen.current = true
@@ -286,7 +279,12 @@ export function NativeChatVoiceConversation(
     }
   }, [outputActive])
   useEffect(() => {
-    if (running && queued && canSend && (replyFinished || interrupting)) {
+    if (interrupting && props.working && !stopRequested.current) {
+      stopRequested.current = props.onStopAgent() !== false
+    }
+  })
+  useEffect(() => {
+    if (running && queued && canSend && replyFinished) {
       send(queued)
     }
   })
@@ -321,7 +319,9 @@ export function NativeChatVoiceConversation(
         speaking={playback.speaking}
         stateLabel={stateLabel}
         startDisabled={
-          !canSend ||
+          !props.active ||
+          props.blocked ||
+          props.transport.sessionPending ||
           !input.ready ||
           !playback.available ||
           input.state !== 'idle' ||
@@ -362,23 +362,15 @@ export function NativeChatVoiceConversation(
             return
           }
           gate.current?.reset()
+          input.clearError()
           playback.restart()
           setNotice('')
           setAwaiting(false)
-          const generation = ++preparation.current
-          setPreparing(true)
-          const client = new StsLocalModelClient()
-          models.current = client
-          try {
-            const load = window.api.speech.loadTurnModels
-            if (!load) {
-              throw new Error('local_turn_models_unsupported')
-            }
-            await client.start(load)
-          } catch {
-            if (generation !== preparation.current || !mounted.current) {
-              return
-            }
+          const result = await models.start(window.api.speech.loadTurnModels)
+          if (result === 'canceled' || !mounted.current) {
+            return
+          }
+          if (result === 'failed') {
             end()
             setNotice(
               translate(
@@ -388,10 +380,6 @@ export function NativeChatVoiceConversation(
             )
             return
           }
-          if (generation !== preparation.current || !mounted.current) {
-            return
-          }
-          setPreparing(false)
           runningRef.current = true
           setRunning(true)
           if (!input.start()) {

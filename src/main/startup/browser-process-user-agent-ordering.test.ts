@@ -12,7 +12,9 @@ const mocks = vi.hoisted(() => {
     // Preflight reads commandLine to select the Linux keyring backend.
     commandLine: { hasSwitch: vi.fn(() => false), appendSwitch: vi.fn() },
     getVersion: vi.fn(() => '1.0.0'),
+    getName: vi.fn(() => 'Orca Development'),
     getPath: vi.fn(() => '/canonical-user-data'),
+    setPath: vi.fn(),
     get userAgentFallback(): string {
       events.push('read-user-agent')
       return userAgent

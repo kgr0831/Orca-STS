@@ -38,12 +38,17 @@ export function spokenProse(text: string): string {
 export class StsVoicePlayback {
   private consumed = new Map<string, string>()
   private boundary = { sequence: -1, index: -1 }
+  private following = new Set<string>()
 
-  reset(messages: readonly NativeChatMessage[]): void {
+  reset(messages: readonly NativeChatMessage[], followRunning = false): void {
     this.consumed.clear()
+    this.following.clear()
     this.boundary = { sequence: -1, index: -1 }
     for (const message of messages) {
       this.consumed.set(message.id, spokenProse(voiceMessageText(message)))
+      if (followRunning && message.state === 'running') {
+        this.following.add(message.id)
+      }
       const position = message.journalPosition
       if (position && this.afterBoundary(position)) {
         this.boundary = position
@@ -65,7 +70,11 @@ export class StsVoicePlayback {
     commit: boolean
   ): string | null {
     for (const message of messages) {
-      if (message.journalPosition && !this.afterBoundary(message.journalPosition)) {
+      if (
+        message.journalPosition &&
+        !this.afterBoundary(message.journalPosition) &&
+        !this.following.has(message.id)
+      ) {
         continue
       }
       const text = spokenProse(voiceMessageText(message))

@@ -5,7 +5,8 @@ import { playElevenLabsStream } from './elevenlabs-stream-playback'
 export function playElevenLabsSpeech(
   request: Omit<ElevenLabsSpeechRequest, 'requestId'>,
   onEnd: () => void,
-  onError: () => void
+  onError: () => void,
+  context?: AudioContext
 ): () => void {
   const requestId = createBrowserUuid()
   if (
@@ -13,7 +14,7 @@ export function playElevenLabsSpeech(
     window.api.speech.streamElevenLabs &&
     window.api.speech.onElevenLabsAudio
   ) {
-    return playElevenLabsStream({ ...request, requestId }, onEnd, onError)
+    return playElevenLabsStream({ ...request, requestId }, onEnd, onError, context)
   }
   let canceled = false
   let audio: HTMLAudioElement | null = null

@@ -58,7 +58,14 @@ export function NativeChatVoiceSession({
               ? controller.latestTurn.itemId
               : undefined
           }
-          onStopAgent={() => stopControls.composer.onStop?.()}
+          onStopAgent={() => {
+            const stop = stopControls.composer.onStop
+            if (!stop) {
+              return false
+            }
+            stop()
+            return true
+          }}
         />
       </div>
     </NativeChatVoiceLayout>
