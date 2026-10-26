@@ -12,7 +12,6 @@ import { translate } from '@/i18n/i18n'
 
 export type { NativeChatViewProps } from './native-chat-view-types'
 
-/** Resolves an agent terminal into its native conversation and composer UI. */
 export default function NativeChatView(props: NativeChatViewProps): React.JSX.Element {
   const voiceTabId = useVoiceSidebarSessions((s) => s.mountedTabId)
   if (props.mode === 'structured' && !props.presentation && props.tabId === voiceTabId) {
