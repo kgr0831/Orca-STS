@@ -8,6 +8,8 @@ export function useNativeChatVoiceInput(args: {
   autoSend: boolean
   onReady: (text: string) => void
   onBeforeStart: () => void
+  onTranscript?: (text: string, final: boolean) => void
+  onCaptureEnded?: () => void
 }) {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const [draft, setDraftState] = useState('')
@@ -52,6 +54,9 @@ export function useNativeChatVoiceInput(args: {
       onPartial: (text) => {
         if (owns.current) {
           setPartial(text)
+          if (!cancelled.current) {
+            latest.current.onTranscript?.(text, false)
+          }
         }
       },
       onFinal: (text) => {
@@ -59,6 +64,12 @@ export function useNativeChatVoiceInput(args: {
           return
         }
         setPartial('')
+        if (latest.current.onTranscript) {
+          if (!cancelled.current) {
+            latest.current.onTranscript(text, true)
+          }
+          return
+        }
         setDraft(draftRef.current + text)
         if (latest.current.autoSend) {
           dispatchDictationControl('stop')
@@ -71,6 +82,9 @@ export function useNativeChatVoiceInput(args: {
         owns.current = false
         setOwned(false)
         setPartial('')
+        if (!cancelled.current) {
+          latest.current.onCaptureEnded?.()
+        }
         if (
           !cancelled.current &&
           latest.current.active &&

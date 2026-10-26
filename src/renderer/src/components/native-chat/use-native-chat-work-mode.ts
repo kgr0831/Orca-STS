@@ -12,7 +12,9 @@ export function useNativeChatWorkMode(
   const [model, setModel] = useState('auto')
   const modelOption = transport.optionSnapshot.find((option) => option.category === 'model')
   const models = modelOption?.kind.type === 'select' ? modelOption.kind.choices : []
-  const automaticModel = models.find((choice) => choice.value === 'gpt-6.1-sol')?.value ?? null
+  const automaticModel =
+    ['gpt-6-astra', 'gpt-6.1-sol'].find((id) => models.some((choice) => choice.value === id)) ??
+    null
   const specialistModel = model === 'auto' ? automaticModel : model
   const demandModelCatalog = transport.optionsSurface.demandModelCatalog
   useEffect(() => {

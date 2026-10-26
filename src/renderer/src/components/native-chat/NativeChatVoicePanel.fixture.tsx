@@ -15,8 +15,8 @@ const options: SessionOptionDescriptor[] = [
     transport: 'agent-session',
     kind: {
       type: 'select',
-      currentValue: 'gpt-6.1-sol',
-      choices: [{ value: 'gpt-6.1-sol', label: 'GPT-6.1-Sol' }]
+      currentValue: 'gpt-6-luna',
+      choices: [{ value: 'gpt-6-luna', label: 'GPT-6-Luna' }]
     }
   },
   {
@@ -39,9 +39,9 @@ const options: SessionOptionDescriptor[] = [
 
 const props: NativeChatVoicePanelProps = {
   running: true,
-  listening: false,
+  listening: true,
   speaking: true,
-  stateLabel: '답변 읽는 중',
+  stateLabel: '답변 중 · 내 말도 듣고 있음',
   startDisabled: false,
   canInterrupt: true,
   userCaption: '오른쪽 패널에서 대화하면서 개발 작업도 할 수 있으면 좋겠어.',
@@ -119,6 +119,7 @@ export const setup = defineFixture({
   render: () => (
     <Panel
       running={false}
+      listening={false}
       speaking={false}
       canInterrupt={false}
       startDisabled

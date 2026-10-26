@@ -93,6 +93,10 @@ jobs:
           src/renderer/src/components/native-chat/use-native-chat-work-mode.test.tsx
           src/renderer/src/components/native-chat/NativeChatStructuredSession.availability-notice.test.tsx
           src/shared/sts-voice-playback.test.ts
+          src/shared/sts-voice-turn-taking.test.ts
+          src/renderer/src/components/native-chat/NativeChatVoiceConversation.test.tsx
+          src/renderer/src/components/native-chat/use-native-chat-voice-input.test.tsx
+          src/renderer/src/components/native-chat/use-native-chat-voice-preset.test.tsx
           src/main/speech/elevenlabs-speech-client.test.ts
           src/renderer/src/components/dictation/elevenlabs-stream-playback.test.ts
           src/main/speech/elevenlabs-transcription-session.test.ts

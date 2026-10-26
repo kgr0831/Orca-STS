@@ -7,6 +7,7 @@ const sockets = vi.hoisted(
     items: {
       sent: { commit?: boolean; audio_base_64?: string }[]
       terminated: boolean
+      url: URL
       receive: (value: unknown) => void
     }[]
   } => ({ items: [] })
@@ -21,7 +22,7 @@ vi.mock('ws', async () => {
       bufferedAmount = 0
       sent: { commit?: boolean; audio_base_64?: string }[] = []
       terminated = false
-      constructor() {
+      constructor(readonly url: URL) {
         super()
         sockets.items.push(this)
       }
@@ -118,11 +119,19 @@ describe('ElevenLabs realtime dictation lifetime', () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 
-  it('closes a silent microphone instead of keeping a paid stream open', async () => {
+  it('keeps an explicitly started conversation open during silence and detects a dead connection', async () => {
     const { session, socket, events } = await start()
-    await vi.advanceTimersByTimeAsync(60_000)
+    expect(socket.url.searchParams.get('language_code')).toBe('ko')
+    expect(socket.url.searchParams.get('keepalive_interval_ms')).toBe('5000')
+    for (let i = 0; i < 18; i++) {
+      await vi.advanceTimersByTimeAsync(5000)
+      socket.receive({ message_type: 'partial_transcript', text: '' })
+    }
+    expect(socket.terminated).toBe(false)
+    expect(events.some((event) => event.type === 'error')).toBe(false)
+    await vi.advanceTimersByTimeAsync(30_000)
     expect(socket.terminated).toBe(true)
-    expect(events).toEqual([{ type: 'error', error: 'elevenlabs_speech_idle_timeout' }])
+    expect(events.at(-1)).toEqual({ type: 'error', error: 'elevenlabs_connection_timeout' })
     await session.finish()
   })
 })

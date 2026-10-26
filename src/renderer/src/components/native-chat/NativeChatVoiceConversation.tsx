@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { translate } from '@/i18n/i18n'
 import { useAppStore } from '@/store'
 import type { NativeChatMessage } from '../../../../shared/native-chat-types'
 import { voiceMessageText } from '../../../../shared/sts-voice-playback'
+import { StsVoiceTurnTaking } from '../../../../shared/sts-voice-turn-taking'
 import type { NativeChatStructuredComposerTransport } from './native-chat-composer-types'
 import { completeNativeChatStructuredUserAction } from './native-chat-structured-user-action'
 import { useNativeChatVoiceInput } from './use-native-chat-voice-input'
@@ -27,41 +28,47 @@ export function NativeChatVoiceConversation(
   const [awaiting, setAwaiting] = useState(false)
   const [interrupting, setInterrupting] = useState(false)
   const [notice, setNotice] = useState('')
-  const [lastSent, setLastSent] = useState('')
-  const workSeen = useRef(false)
-  const sendInFlight = useRef(false)
-  const conversationRun = useRef(0)
+  const [caption, setCaption] = useState('')
+  const [queued, setQueued] = useState('')
+  const queue = useRef('')
+  const runningRef = useRef(false)
   const mounted = useRef(true)
+  const sendInFlight = useRef(false)
+  const workSeen = useRef(false)
   const replyBaseline = useRef('')
   const turnBaseline = useRef<string | undefined>(undefined)
+  const gate = useRef<StsVoiceTurnTaking | null>(null)
   const latestAnswer = props.messages.findLast((message) => voiceMessageText(message).trim())
   const answer = latestAnswer ? voiceMessageText(latestAnswer) : ''
   const replyRevision = latestAnswer ? `${latestAnswer.id}:${answer}` : ''
-  const dictationState = useAppStore((store) => store.dictationState)
   const voiceSettings = useAppStore((store) => store.settings?.voice)
+  const input = useNativeChatVoiceInput({
+    active: props.active,
+    autoSend: false,
+    onReady: () => {},
+    onBeforeStart: () => setNotice(''),
+    onTranscript: (text, final) => {
+      if (runningRef.current) {
+        gate.current?.receive(text, final)
+      }
+    },
+    onCaptureEnded: () => {
+      if (!runningRef.current) {
+        return
+      }
+      end()
+      setNotice(
+        translate('stsLive.captureEnded', 'Microphone capture ended. Start again to reconnect.')
+      )
+    }
+  })
   const playback = useNativeChatVoicePlayback(
     props.messages,
     props.working,
     props.active && running,
     voiceSettings,
-    dictationState !== 'idle' || interrupting
+    interrupting
   )
-  const input = useNativeChatVoiceInput({
-    active: props.active && !props.blocked,
-    autoSend: true,
-    onReady: (text) => {
-      if (running) {
-        send(text)
-      }
-    },
-    onBeforeStart: () => {
-      playback.stop()
-      setNotice('')
-      setAwaiting(false)
-    }
-  })
-  const { cancel: cancelInput, start: startInput } = input
-  const { stop: stopPlayback } = playback
   const canSend =
     props.active &&
     !props.blocked &&
@@ -70,39 +77,65 @@ export function NativeChatVoiceConversation(
     !props.transport.sendOut &&
     !props.transport.sendBlockedReason &&
     !props.transport.sessionPending
+  const replyFinished =
+    !awaiting ||
+    workSeen.current ||
+    replyRevision !== replyBaseline.current ||
+    (props.completedTurn !== undefined && props.completedTurn !== turnBaseline.current)
+  const outputActive =
+    playback.speaking || playback.pending || props.working || (awaiting && !replyFinished)
 
   function end(): void {
-    conversationRun.current += 1
+    runningRef.current = false
     setRunning(false)
     setAwaiting(false)
     setInterrupting(false)
-    stopPlayback()
-    cancelInput()
+    gate.current?.reset()
+    playback.stop()
+    input.cancel()
+  }
+
+  function interrupt(): void {
+    playback.stop()
+    setInterrupting(true)
+    if (props.working || awaiting || sendInFlight.current) {
+      props.onStopAgent()
+    }
+  }
+
+  function enqueue(text: string): void {
+    queue.current = [queue.current, text].filter(Boolean).join(' ')
+    setQueued(queue.current)
+    input.setDraft(queue.current)
   }
 
   function send(text: string): void {
-    if (!text.trim() || sendInFlight.current) {
-      return
-    }
-    if (!canSend) {
-      setNotice(
-        translate('stsVoice.notSent', 'Not sent. Keep the text and send when the chat is ready.')
-      )
-      end()
+    if (!text.trim() || !canSend || sendInFlight.current) {
       return
     }
     sendInFlight.current = true
     setSending(true)
     setNotice('')
+    setInterrupting(false)
     workSeen.current = false
     replyBaseline.current = replyRevision
     turnBaseline.current = props.completedTurn
-    const run = ++conversationRun.current
+    queue.current = ''
+    setQueued('')
+    playback.restart()
+    let settled = false
     const failed = (unconfirmed: boolean) => {
+      if (settled) {
+        return
+      }
+      settled = true
       sendInFlight.current = false
       if (!mounted.current) {
         return
       }
+      queue.current = [text, queue.current].filter(Boolean).join(' ')
+      setQueued(queue.current)
+      input.setDraft(queue.current)
       setSending(false)
       end()
       setNotice(
@@ -121,18 +154,21 @@ export function NativeChatVoiceConversation(
       const result = props.transport.send(text, [], {
         callerKeepsText: true,
         onSettled: (outcome) => {
+          if (settled) {
+            return
+          }
           if (outcome !== 'recorded') {
             failed(outcome === 'unconfirmed')
             return
           }
+          settled = true
           sendInFlight.current = false
           if (!mounted.current) {
             return
           }
           setSending(false)
-          setLastSent(text)
-          input.setDraft('')
-          setAwaiting(run === conversationRun.current)
+          input.setDraft(queue.current)
+          setAwaiting(runningRef.current)
         }
       })
       if (result === false) {
@@ -145,11 +181,44 @@ export function NativeChatVoiceConversation(
     }
   }
 
+  const callbacks = useRef({
+    interrupt,
+    enqueue,
+    outputActive,
+    playbackText: playback.speaking ? playback.caption : ''
+  })
+  callbacks.current = {
+    interrupt,
+    enqueue,
+    outputActive,
+    playbackText: playback.speaking ? playback.caption : ''
+  }
   useEffect(() => {
     mounted.current = true
+    gate.current = new StsVoiceTurnTaking({
+      output: () =>
+        callbacks.current.outputActive
+          ? {
+              text: callbacks.current.playbackText,
+              question: /[?？]\s*$/.test(callbacks.current.playbackText)
+            }
+          : null,
+      interrupt: () => {
+        if (runningRef.current) {
+          callbacks.current.interrupt()
+        }
+      },
+      utterance: (text) => {
+        if (runningRef.current) {
+          callbacks.current.enqueue(text)
+        }
+      },
+      caption: setCaption
+    })
     return () => {
       mounted.current = false
-      conversationRun.current += 1
+      runningRef.current = false
+      gate.current?.close()
     }
   }, [])
   useEffect(() => {
@@ -158,109 +227,34 @@ export function NativeChatVoiceConversation(
     }
   }, [props.working, awaiting, sending])
   useEffect(() => {
-    const pause = () => {
-      conversationRun.current += 1
-      setRunning(false)
-      setAwaiting(false)
-      setInterrupting(false)
-      stopPlayback()
-      cancelInput()
+    if (!outputActive) {
+      gate.current?.outputEnded()
     }
-    const visibilityChanged = () => {
-      if (document.visibilityState !== 'visible') {
-        pause()
-      }
-    }
-    window.addEventListener('blur', pause)
-    document.addEventListener('visibilitychange', visibilityChanged)
-    return () => {
-      window.removeEventListener('blur', pause)
-      document.removeEventListener('visibilitychange', visibilityChanged)
-    }
-  }, [cancelInput, stopPlayback])
+  }, [outputActive])
   useEffect(() => {
-    if (!props.active || input.error || playback.error || (running && !playback.available)) {
-      conversationRun.current += 1
-      // oxlint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- External audio failure must release capture and cancel automatic turns.
-      setRunning(false)
-      setAwaiting(false)
-      stopPlayback()
-      cancelInput()
+    if (running && queued && canSend && (replyFinished || interrupting)) {
+      send(queued)
     }
-  }, [
-    props.active,
-    input.error,
-    playback.error,
-    playback.available,
-    running,
-    stopPlayback,
-    cancelInput
-  ])
+  })
   useEffect(() => {
-    const replyFinished =
-      !awaiting ||
-      workSeen.current ||
-      replyRevision !== replyBaseline.current ||
-      (props.completedTurn !== undefined && props.completedTurn !== turnBaseline.current)
-    if (
-      !running ||
-      !replyFinished ||
-      !canSend ||
-      input.draft ||
-      !input.ready ||
-      input.error ||
-      input.owned ||
-      input.state !== 'idle' ||
-      playback.speaking ||
-      (!interrupting && playback.pending) ||
-      playback.error ||
-      !playback.available
-    ) {
-      return
+    if (running && (!props.active || input.error || !playback.available)) {
+      end()
     }
-    const timer = setTimeout(() => {
-      setAwaiting(false)
-      setInterrupting(false)
-      startInput()
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [
-    running,
-    awaiting,
-    interrupting,
-    canSend,
-    replyRevision,
-    props.completedTurn,
-    input.draft,
-    input.ready,
-    input.error,
-    input.owned,
-    input.state,
-    startInput,
-    playback.speaking,
-    playback.pending,
-    playback.error,
-    playback.available
-  ])
+  })
 
-  const stateLabel = interrupting
-    ? translate('stsLive.interrupting', 'Stopping the reply…')
-    : input.owned
-      ? input.state === 'starting'
+  const stateLabel =
+    interrupting && props.working
+      ? translate('stsLive.interrupting', 'Stopping the reply…')
+      : input.state === 'starting' && input.owned
         ? translate('stsVoice.starting', 'Starting microphone…')
-        : input.state === 'stopping'
-          ? translate('stsVoice.processing', 'Finishing recognition…')
-          : translate('stsVoice.listening', 'Listening')
-      : sending
-        ? translate('stsVoice.sending', 'Sending…')
-        : playback.speaking
-          ? translate('stsVoice.speaking', 'Reading response')
-          : props.blocked
-            ? translate('stsLive.waiting', 'Waiting for the chat to be ready')
-            : props.working || awaiting
-              ? translate('stsVoice.working', 'Codex is working')
-              : running
-                ? translate('stsLive.reconnecting', 'Listening again shortly…')
+        : sending
+          ? translate('stsVoice.sending', 'Sending…')
+          : playback.speaking
+            ? translate('stsLive.speakingListening', 'Speaking · listening for you')
+            : props.working || (awaiting && !replyFinished)
+              ? translate('stsLive.workingListening', 'Working · listening for you')
+              : input.owned
+                ? translate('stsVoice.listening', 'Listening')
                 : translate('stsVoice.ready', 'Ready')
   return (
     <>
@@ -284,20 +278,16 @@ export function NativeChatVoiceConversation(
           input.state !== 'idle' ||
           Boolean(input.draft)
         }
-        canInterrupt={
-          running && !sending && !interrupting && (props.working || playback.speaking || awaiting)
-        }
-        userCaption={[input.draft || (input.owned ? '' : lastSent), input.partial]
-          .filter(Boolean)
-          .join(' ')}
-        assistantCaption={playback.speaking ? playback.caption : answer}
+        canInterrupt={running && !interrupting && outputActive}
+        userCaption={caption || input.draft}
+        assistantCaption={answer}
         notice={
           notice ||
           input.error ||
           (playback.error
             ? translate(
                 'stsLive.audioFailed',
-                'Audio failed. Check Voice settings, then start again.'
+                'Audio playback failed. Listening continues; check Voice settings.'
               )
             : '')
         }
@@ -306,6 +296,8 @@ export function NativeChatVoiceConversation(
         canRetry={canSend && input.state === 'idle'}
         onRetry={() => send(input.draft)}
         onDiscard={() => {
+          queue.current = ''
+          setQueued('')
           input.setDraft('')
           setNotice('')
         }}
@@ -317,20 +309,19 @@ export function NativeChatVoiceConversation(
             }
             return
           }
+          gate.current?.reset()
           playback.restart()
           setNotice('')
-          setRunning(true)
           setAwaiting(false)
-          startInput()
+          runningRef.current = true
+          setRunning(true)
+          if (!input.start()) {
+            end()
+          }
         }}
         onInterrupt={() => {
-          conversationRun.current += 1
-          setAwaiting(false)
-          setInterrupting(true)
-          stopPlayback()
-          if (props.working) {
-            props.onStopAgent()
-          }
+          gate.current?.reset()
+          interrupt()
         }}
       />
     </>
