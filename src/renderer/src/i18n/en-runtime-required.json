@@ -3478,18 +3478,25 @@
     "finishEditing": "Save or cancel the preset to continue creating your workspace.",
     "pathHelp": "One repository-relative directory per line. Spaces within a path are preserved."
   },
+  "stsLive": {
+    "reconnecting": "Listening again shortly…",
+    "waiting": "Waiting for the chat to be ready"
+  },
   "stsVoice": {
     "automatic": "Send after a pause and listen again after the reply",
     "close": "Close voice conversation",
     "finish": "Finish speaking",
     "noVoice": "Set up the selected voice in Settings → Voice. Captions remain available.",
     "pause": "Pause conversation",
+    "processing": "Finishing recognition…",
     "read": "Read replies aloud",
     "send": "Send text",
     "setup": "Enable voice input and select Korean streaming or ElevenLabs Scribe in Settings → Voice.",
+    "speaking": "Reading response",
     "speechError": "Audio playback failed. Turn Read replies aloud off and on to retry.",
     "start": "Start speaking",
-    "stopAgent": "Stop Codex"
+    "stopAgent": "Stop Codex",
+    "working": "Codex is working"
   },
   "terminal": {
     "newerDaemonBanner": {
