@@ -21276,7 +21276,7 @@
     "waiting": "等待聊天就绪",
     "reconnecting": "即将恢复收听…",
     "hint": "收听会持续到你结束对话。附和会让回复继续，新问题或“停止”会打断回复。",
-    "setup": "在语音设置中选择适合你语言的实时识别模型或ElevenLabs Scribe。本地播放需要安装与Orca语言匹配的系统语音。",
+    "setup": "在语音设置中选择支持对话语言的流式识别模型或 ElevenLabs Scribe。本地播放需要安装与对话语言匹配的系统语音。",
     "captions": "对话字幕",
     "yourCaption": "你说的话会显示在这里。",
     "answerCaption": "语音回复和字幕会显示在这里。",
