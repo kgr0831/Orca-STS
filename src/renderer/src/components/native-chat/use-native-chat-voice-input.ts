@@ -32,6 +32,7 @@ export function useNativeChatVoiceInput(args: {
       resolveRendererUiLocale(store.settings?.uiLanguage ?? 'system')
   )
   const ready = supportsVoiceConversation(settings, language)
+  const clearError = useCallback(() => setError(''), [])
   const setDraft = useCallback((text: string) => {
     draftRef.current = text
     setDraftState(text)
@@ -147,5 +148,18 @@ export function useNativeChatVoiceInput(args: {
     return true
   }, [ready])
 
-  return { inputRef, draft, setDraft, partial, owned, state, ready, error, start, stop, cancel }
+  return {
+    inputRef,
+    draft,
+    setDraft,
+    partial,
+    owned,
+    state,
+    ready,
+    error,
+    clearError,
+    start,
+    stop,
+    cancel
+  }
 }

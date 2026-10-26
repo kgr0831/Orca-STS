@@ -20,6 +20,20 @@ function message(id: string, text: string, sequence = 1): NativeChatMessage {
 }
 
 describe('voice reply playback', () => {
+  it('joins a running reply from its current position without reading old or paged history', () => {
+    const playback = new StsVoicePlayback()
+    const current = message('current', 'Already visible. ', 10)
+    playback.reset([current], true)
+    current.blocks = [{ type: 'text', text: 'Already visible. New spoken words.' }]
+    expect(playback.next([message('older', 'Old history.', 5), current], true)).toBe(
+      'New spoken words.'
+    )
+    playback.reset([current])
+    current.blocks = [
+      { type: 'text', text: 'Already visible. New spoken words. Late interrupted words.' }
+    ]
+    expect(playback.next([current], true)).toBeNull()
+  })
   it('waits for a sentence, speaks each increment once, and flushes the final fragment', () => {
     const playback = new StsVoicePlayback()
     const row = message('reply', '첫 번째')

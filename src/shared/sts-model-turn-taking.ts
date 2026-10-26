@@ -11,6 +11,8 @@ export class StsModelTurnTaking {
   private interrupted = false
   private deferred = ''
   private retries = 0
+  private deciding = false
+  private final = false
   private timer: ReturnType<typeof setTimeout> | undefined
 
   constructor(
@@ -24,6 +26,7 @@ export class StsModelTurnTaking {
       waiting?: () => void
       pending?: (value: boolean) => void
       clearAudio?: () => void
+      holdOutput?: (held: boolean) => void
     }
   ) {}
 
@@ -35,24 +38,45 @@ export class StsModelTurnTaking {
     if (this.closed || !value.trim()) {
       return
     }
-    clearTimeout(this.timer)
+    if (!final && value.trim() === this.current) {
+      return
+    }
     this.deferred = ''
     this.current = value.trim()
     this.callbacks.pending?.(true)
     this.retries = 0
+    this.final = final
     this.overlap ??= this.callbacks.output()
-    const revision = ++this.revision
+    if (this.overlap && !this.interrupted) {
+      this.callbacks.holdOutput?.(true)
+    }
+    ++this.revision
     const text = [this.committed, this.current].filter(Boolean).join(' ')
     this.callbacks.caption(text)
+    if (final) {
+      this.committed = text
+      this.current = ''
+      clearTimeout(this.timer)
+      this.timer = undefined
+    }
+    this.schedule()
+  }
+
+  private schedule(): void {
+    if (this.closed || this.deciding || this.timer !== undefined || !this.pendingText) {
+      return
+    }
     this.timer = setTimeout(
       () => {
-        void this.decide(revision, text, final)
+        this.timer = undefined
+        void this.decide(this.revision, this.pendingText, this.final)
       },
-      final ? 0 : 120
+      this.final ? 0 : 120
     )
   }
 
   private async decide(revision: number, text: string, final: boolean): Promise<void> {
+    this.deciding = true
     try {
       const result = await this.callbacks.predict(text, this.overlap?.text ?? '', final)
       if (this.closed || revision !== this.revision) {
@@ -61,6 +85,7 @@ export class StsModelTurnTaking {
       const backchannel = result.intent === 'backchannel' && result.confidence >= 0.65
       const stop = result.intent === 'stop' && result.confidence >= STS_STOP_CONFIDENCE
       if (this.overlap && !this.interrupted && backchannel) {
+        this.callbacks.holdOutput?.(false)
         if (final) {
           if (result.expectsAnswer) {
             this.deferred = text
@@ -82,6 +107,7 @@ export class StsModelTurnTaking {
         if (!this.interrupted) {
           this.interrupted = true
           this.callbacks.interrupt()
+          this.callbacks.holdOutput?.(false)
         }
       }
       if (!final) {
@@ -96,16 +122,27 @@ export class StsModelTurnTaking {
       if (result.complete >= 0.5) {
         this.submit()
       } else if (this.retries++ < 4) {
+        this.callbacks.waiting?.()
         this.timer = setTimeout(() => {
+          this.timer = undefined
           void this.decide(revision, text, true)
         }, 600)
       } else {
-        this.callbacks.waiting?.()
+        this.submit()
       }
-      // An incomplete prediction keeps the words until speech resumes or the user sends them.
     } catch {
       if (!this.closed && revision === this.revision) {
+        if (this.overlap && !this.interrupted) {
+          this.interrupted = true
+          this.callbacks.interrupt()
+        }
+        this.callbacks.holdOutput?.(false)
         this.callbacks.error()
+      }
+    } finally {
+      this.deciding = false
+      if (revision !== this.revision) {
+        this.schedule()
       }
     }
   }
@@ -140,6 +177,8 @@ export class StsModelTurnTaking {
     this.overlap = null
     this.interrupted = false
     this.retries = 0
+    this.final = false
+    this.callbacks.holdOutput?.(false)
     this.callbacks.pending?.(false)
     this.callbacks.clearAudio?.()
   }

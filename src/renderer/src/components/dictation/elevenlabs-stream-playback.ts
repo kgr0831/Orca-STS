@@ -1,4 +1,5 @@
 import type { ElevenLabsSpeechRequest } from '../../../../shared/speech-types'
+import { resumeSpeechAudioContext } from './resume-speech-audio-context'
 
 const SAMPLE_RATE = 24000
 const MAX_BYTES = 4 * 1024 * 1024
@@ -6,7 +7,8 @@ const MAX_BYTES = 4 * 1024 * 1024
 export function playElevenLabsStream(
   request: ElevenLabsSpeechRequest,
   onEnd: () => void,
-  onError: () => void
+  onError: () => void,
+  sharedContext?: AudioContext
 ): () => void {
   let stopped = false
   let finished = false
@@ -14,7 +16,7 @@ export function playElevenLabsStream(
   let received = 0
   let trailingByte: number | undefined
   let nextTime = 0
-  let context: AudioContext | null = null
+  let context: AudioContext | null = sharedContext ?? null
   let unsubscribe = () => {}
   const sources = new Set<AudioBufferSourceNode>()
 
@@ -26,10 +28,10 @@ export function playElevenLabsStream(
       source.disconnect()
     }
     sources.clear()
-    if (context) {
+    if (context && !sharedContext) {
       void context.close().catch(() => undefined)
-      context = null
     }
+    context = null
   }
 
   function cancel(): void {
@@ -105,8 +107,10 @@ export function playElevenLabsStream(
     if (!streamElevenLabs || !onElevenLabsAudio) {
       throw new Error('stream_unavailable')
     }
-    context = new AudioContext({ latencyHint: 'interactive' })
-    await context.resume()
+    if (!context) {
+      context = new AudioContext({ latencyHint: 'interactive' })
+      await resumeSpeechAudioContext(context)
+    }
     if (stopped) {
       return
     }

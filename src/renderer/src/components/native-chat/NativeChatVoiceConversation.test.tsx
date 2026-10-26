@@ -16,6 +16,7 @@ const fake = vi.hoisted(() => ({
     state: 'idle',
     ready: true,
     error: '',
+    clearError: vi.fn(),
     start: vi.fn(),
     stop: vi.fn(),
     cancel: vi.fn(),
@@ -28,7 +29,9 @@ const fake = vi.hoisted(() => ({
     available: true,
     error: false,
     stop: vi.fn(),
-    restart: vi.fn()
+    restart: vi.fn(),
+    hold: vi.fn(),
+    prepare: vi.fn()
   },
   capture: { onTranscript: (_text: string, _final: boolean) => {}, onCaptureEnded: () => {} }
 }))
@@ -86,6 +89,9 @@ beforeEach(() => {
     fake.input.state = 'listening'
     return true
   })
+  fake.input.clearError.mockImplementation(() => {
+    fake.input.error = ''
+  })
   fake.input.setDraft.mockImplementation((text: string) => {
     fake.input.draft = text
   })
@@ -95,7 +101,7 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-async function setup(outcome: 'recorded' | 'unconfirmed' = 'recorded') {
+async function setup(outcome: 'recorded' | 'unconfirmed' = 'recorded', working = false) {
   const send = vi.fn<NativeChatStructuredComposerTransport['send']>(
     (_text, _attachments, request) => {
       request?.onSettled?.(outcome)
@@ -105,7 +111,7 @@ async function setup(outcome: 'recorded' | 'unconfirmed' = 'recorded') {
   const props: NativeChatVoiceConversationProps = {
     active: true,
     blocked: false,
-    working: false,
+    working,
     messages: [],
     onStopAgent: vi.fn(),
     transport: {
@@ -145,6 +151,63 @@ async function setup(outcome: 'recorded' | 'unconfirmed' = 'recorded') {
 }
 
 describe('continuous sidebar conversation', () => {
+  it('can start again after a previous capture error without the old error ending preparation', async () => {
+    const { update } = await setup()
+    fake.input.error = 'elevenlabs_connection_failed'
+    fake.input.state = 'idle'
+    fake.input.owned = false
+    update()
+    expect(screen.getByRole('button', { name: 'Start voice conversation' })).toBeTruthy()
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Start voice conversation' }))
+    })
+    expect(fake.input.error).toBe('')
+    expect(fake.input.start).toHaveBeenCalledTimes(2)
+    expect(screen.getByRole('button', { name: 'End voice conversation' })).toBeTruthy()
+  })
+
+  it('waits for a sent turn to become stoppable before delivering an interruption', async () => {
+    const { submit, update, send, props } = await setup()
+    await submit()
+    const stop = vi.fn(() => false)
+    update({ onStopAgent: stop })
+    await act(async () => {
+      fake.capture.onTranscript('Actually, use the other file', true)
+      await vi.advanceTimersByTimeAsync(250)
+    })
+    expect(send).toHaveBeenCalledOnce()
+    stop.mockReturnValue(true)
+    update({ working: true })
+    expect(props.onStopAgent).toHaveBeenCalledTimes(2)
+    update({ working: false, completedTurn: 'interrupted' })
+    expect(send).toHaveBeenCalledTimes(2)
+    expect(send.mock.lastCall?.[0]).toBe('Actually, use the other file')
+  })
+  it('joins an existing working chat and submits only after that chat settles', async () => {
+    const { update, submit, send, props } = await setup('recorded', true)
+    expect(fake.input.start).toHaveBeenCalledOnce()
+    expect(screen.getByRole('button', { name: 'End voice conversation' })).toBeTruthy()
+    await submit()
+    expect(props.onStopAgent).toHaveBeenCalledOnce()
+    expect(send).not.toHaveBeenCalled()
+    update({ working: false, completedTurn: 'previous-turn' })
+    expect(send).toHaveBeenCalledOnce()
+    expect(fake.input.start).toHaveBeenCalledOnce()
+  })
+
+  it('holds spoken output immediately while an interruption is being classified', async () => {
+    const { update, props } = await setup()
+    fake.playback.speaking = true
+    update({ working: true })
+    act(() => fake.capture.onTranscript('Wait, I need to correct that', false))
+    expect(fake.playback.hold).toHaveBeenLastCalledWith(true)
+    expect(props.onStopAgent).not.toHaveBeenCalled()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120)
+    })
+    expect(props.onStopAgent).toHaveBeenCalledOnce()
+    expect(fake.playback.stop).toHaveBeenCalled()
+  })
   it('keeps the same capture through sending, tool work, playback and completion', async () => {
     const { submit, update, send } = await setup()
     await submit()
