@@ -11,7 +11,7 @@
     "waiting": "Waiting for the chat to be ready",
     "reconnecting": "Listening again shortly…",
     "hint": "Listening stays on until you end the conversation. Acknowledgments let the reply continue; a new question or “stop” interrupts.",
-    "setup": "Choose a streaming speech model for your language or ElevenLabs Scribe in Voice settings. For local playback, install a system voice matching your Orca language.",
+    "setup": "Choose a streaming speech model for your conversation language or ElevenLabs Scribe in Voice settings. For local playback, install a system voice matching the conversation language.",
     "captions": "Conversation captions",
     "yourCaption": "Your words appear here as you speak.",
     "answerCaption": "Voice replies and captions appear here.",

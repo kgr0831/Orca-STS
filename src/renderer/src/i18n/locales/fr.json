@@ -21325,7 +21325,7 @@
     "waiting": "En attente du chat",
     "reconnecting": "Reprise de l’écoute…",
     "hint": "L’écoute reste active jusqu’à la fin. Les acquiescements laissent la réponse continuer ; une nouvelle question ou « arrête » l’interrompt.",
-    "setup": "Dans Voix, choisissez un modèle de reconnaissance en temps réel dans votre langue ou ElevenLabs Scribe. Pour la lecture locale, installez une voix système dans la langue d’Orca.",
+    "setup": "Dans les réglages vocaux, choisissez un modèle de reconnaissance en continu adapté à la langue de la conversation ou ElevenLabs Scribe. Pour la lecture locale, installez une voix système dans cette langue.",
     "captions": "Sous-titres de la conversation",
     "yourCaption": "Vos mots apparaissent ici pendant que vous parlez.",
     "answerCaption": "Les réponses vocales et les sous-titres apparaissent ici.",

@@ -21329,7 +21329,7 @@
     "waiting": "Esperando o chat ficar pronto",
     "reconnecting": "Voltando a ouvir…",
     "hint": "A escuta continua até você encerrar. Confirmações deixam a resposta continuar; uma nova pergunta ou «pare» interrompe.",
-    "setup": "Em Voz, escolha um modelo de reconhecimento em tempo real para seu idioma ou ElevenLabs Scribe. Para reprodução local, instale uma voz do sistema no idioma do Orca.",
+    "setup": "Nas configurações de voz, escolha um modelo de reconhecimento em streaming para o idioma da conversa ou o ElevenLabs Scribe. Para reprodução local, instale uma voz do sistema nesse idioma.",
     "captions": "Legendas da conversa",
     "yourCaption": "Suas palavras aparecem aqui enquanto você fala.",
     "answerCaption": "Respostas por voz e legendas aparecem aqui.",
