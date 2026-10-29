@@ -21267,7 +21267,10 @@
     "newChat": "Nuevo chat",
     "createFailed": "No se pudo abrir un chat nuevo. Inténtalo de nuevo.",
     "selectChat": "Selecciona un chat Codex abierto para continuar por voz o elige Nuevo chat.",
-    "modelHint": "La voz usa el modelo y los permisos de este chat. Puedes cambiar el modelo arriba."
+    "modelHint": "La voz usa el modelo y los permisos de este chat. Puedes cambiar el modelo arriba.",
+    "terminalModelHint": "La voz continúa la conversación de este terminal con su modelo y permisos actuales.",
+    "terminalRequired": "Inicia o reanuda Codex en este terminal para continuar la misma conversación por voz.",
+    "terminalInputBusy": "Termina la entrada o la solicitud de aprobación actual del terminal antes de enviar lo que has dicho."
   },
   "stsLive": {
     "start": "Iniciar conversación de voz",

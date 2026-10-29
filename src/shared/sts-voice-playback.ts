@@ -39,15 +39,24 @@ export class StsVoicePlayback {
   private consumed = new Map<string, string>()
   private boundary = { sequence: -1, index: -1 }
   private following = new Set<string>()
+  private baselineIds = new Set<string>()
+  private baselineTail: string | null = null
+  private baselineTime = -Infinity
 
   reset(messages: readonly NativeChatMessage[], followRunning = false): void {
     this.consumed.clear()
     this.following.clear()
+    this.baselineIds = new Set(messages.map((message) => message.id))
+    this.baselineTail = messages.at(-1)?.id ?? null
+    this.baselineTime = -Infinity
     this.boundary = { sequence: -1, index: -1 }
     for (const message of messages) {
       this.consumed.set(message.id, spokenProse(voiceMessageText(message)))
-      if (followRunning && message.state === 'running') {
+      if (followRunning && (message.state === 'running' || !message.journalPosition)) {
         this.following.add(message.id)
+      }
+      if (message.timestamp !== null) {
+        this.baselineTime = Math.max(this.baselineTime, message.timestamp)
       }
       const position = message.journalPosition
       if (position && this.afterBoundary(position)) {
@@ -69,7 +78,20 @@ export class StsVoicePlayback {
     working: boolean,
     commit: boolean
   ): string | null {
-    for (const message of messages) {
+    const baselineIndex = messages.findIndex((message) => message.id === this.baselineTail)
+    for (const [index, message] of messages.entries()) {
+      if (!message.journalPosition) {
+        if (this.baselineIds.has(message.id) && !this.following.has(message.id)) {
+          continue
+        }
+        if (
+          !this.consumed.has(message.id) &&
+          (index < baselineIndex ||
+            (message.timestamp !== null && message.timestamp < this.baselineTime))
+        ) {
+          continue
+        }
+      }
       if (
         message.journalPosition &&
         !this.afterBoundary(message.journalPosition) &&

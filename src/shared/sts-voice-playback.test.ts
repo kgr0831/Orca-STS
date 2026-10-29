@@ -20,6 +20,32 @@ function message(id: string, text: string, sequence = 1): NativeChatMessage {
 }
 
 describe('voice reply playback', () => {
+  it('resumes terminal transcripts without reading earlier text or backfilled history', () => {
+    const terminalRow = (
+      id: string,
+      text: string,
+      timestamp: number | null
+    ): NativeChatMessage => ({
+      id,
+      role: 'assistant',
+      source: 'transcript',
+      timestamp,
+      blocks: [{ type: 'text', text }]
+    })
+    const playback = new StsVoicePlayback()
+    const existing = terminalRow('existing', 'Typed conversation.', 10)
+    playback.reset([existing], true)
+    const earlier = terminalRow('earlier', 'Earlier page.', null)
+    existing.blocks = [{ type: 'text', text: 'Typed conversation. New reply.' }]
+    expect(playback.next([earlier, existing], false)).toBe('New reply.')
+    playback.reset([earlier, existing])
+    existing.blocks = [{ type: 'text', text: 'Typed conversation. New reply. Stopped tail.' }]
+    expect(playback.next([earlier, existing], false)).toBeNull()
+    const next = terminalRow('next', 'Next voice turn.', 20)
+    expect(playback.next([earlier, existing, next], false)).toBe('Next voice turn.')
+    playback.reset([earlier, existing, next])
+    expect(playback.next([terminalRow('old-page', 'Old text.', 5), next], false)).toBeNull()
+  })
   it('joins a running reply from its current position without reading old or paged history', () => {
     const playback = new StsVoicePlayback()
     const current = message('current', 'Already visible. ', 10)

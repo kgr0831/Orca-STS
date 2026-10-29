@@ -7,6 +7,7 @@ import type { useNativeChatInstallSlot } from './NativeChatInstallSlot'
 import type { useStructuredAgentSession } from './use-structured-agent-session'
 import type { nativeChatStructuredStopControls } from './native-chat-structured-stop-controls'
 import type { NativeChatStructuredComposerTransport } from './native-chat-composer-types'
+import { completeNativeChatStructuredUserAction } from './native-chat-structured-user-action'
 
 export function NativeChatVoiceSession({
   controller,
@@ -52,7 +53,11 @@ export function NativeChatVoiceSession({
           }
           working={controller.isWorking}
           messages={controller.messages}
-          transport={transport}
+          transport={{
+            ...transport,
+            onAccepted: (reveal) =>
+              completeNativeChatStructuredUserAction('codex', transport, reveal)
+          }}
           completedTurn={
             controller.latestTurn?.turn.state === 'completed'
               ? controller.latestTurn.itemId

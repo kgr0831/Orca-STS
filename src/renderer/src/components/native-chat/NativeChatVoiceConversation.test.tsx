@@ -116,21 +116,7 @@ async function setup(outcome: 'recorded' | 'unconfirmed' = 'recorded', working =
     onStopAgent: vi.fn(),
     transport: {
       send,
-      capturePresentation: () => () => true,
-      dispatchCommand: async () => {
-        throw new Error('No commands in this test')
-      },
-      optionsSurface: {
-        getSnapshot: () => [],
-        setOption: async () => ({ snapshot: [] }),
-        invokeAction: async () => ({ snapshot: [] }),
-        subscribe: () => () => {}
-      },
-      optionSnapshot: [],
-      onError: () => {},
-      runtime: 'local',
-      sessionId: 'voice',
-      runtimeEnvironmentId: null
+      onAccepted: vi.fn()
     }
   }
   const view = render(<NativeChatVoiceConversation {...props} />)
@@ -151,6 +137,31 @@ async function setup(outcome: 'recorded' | 'unconfirmed' = 'recorded', working =
 }
 
 describe('continuous sidebar conversation', () => {
+  it('can alternate text and voice repeatedly without stopping the existing reply', async () => {
+    const { update, props, submit, send } = await setup('recorded', true)
+    fireEvent.click(screen.getByRole('button', { name: 'End voice conversation' }))
+    expect(props.onStopAgent).not.toHaveBeenCalled()
+    expect(fake.input.cancel).toHaveBeenCalled()
+    fake.input.state = 'idle'
+    fake.input.owned = false
+    update({ working: false, completedTurn: 'typed-reply' })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Start voice conversation' }))
+    })
+    await submit()
+    expect(send).toHaveBeenCalledOnce()
+    update({ working: true })
+    fireEvent.click(screen.getByRole('button', { name: 'End voice conversation' }))
+    expect(props.onStopAgent).not.toHaveBeenCalled()
+    fake.input.state = 'idle'
+    fake.input.owned = false
+    update({ working: false, completedTurn: 'voice-reply' })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Start voice conversation' }))
+    })
+    expect(fake.input.start).toHaveBeenCalledTimes(3)
+    expect(send).toHaveBeenCalledOnce()
+  })
   it('can start again after a previous capture error without the old error ending preparation', async () => {
     const { update } = await setup()
     fake.input.error = 'elevenlabs_connection_failed'

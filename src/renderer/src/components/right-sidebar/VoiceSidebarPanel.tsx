@@ -79,7 +79,7 @@ function VoiceWorkspacePanel({
           {translate('stsHistory.createFailed', 'Could not open a new chat. Try again.')}
         </p>
       ) : null}
-      {tab && target ? (
+      {tab && (target || tab.contentType === 'terminal') ? (
         <div
           ref={attach}
           className={cn(NATIVE_CHAT_APPEARANCE_ROOT_CLASS, 'flex min-h-0 min-w-0 flex-1 flex-col')}

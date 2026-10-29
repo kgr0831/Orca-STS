@@ -21448,7 +21448,10 @@
     "newChat": "New chat",
     "createFailed": "Could not open a new chat. Try again.",
     "selectChat": "Select an open Codex chat to continue by voice, or choose New chat.",
-    "modelHint": "Voice uses this chat’s model and permissions. Change the model above when needed."
+    "modelHint": "Voice uses this chat’s model and permissions. Change the model above when needed.",
+    "terminalModelHint": "Voice continues this terminal’s conversation with its current model and permissions.",
+    "terminalRequired": "Start or resume Codex in this terminal to continue the same conversation by voice.",
+    "terminalInputBusy": "Finish the current terminal input or approval before sending spoken words."
   },
   "stsPreferences": {
     "language": "Conversation language",

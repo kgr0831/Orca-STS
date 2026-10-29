@@ -6,8 +6,7 @@ import { voiceMessageText } from '../../../../shared/sts-voice-playback'
 import { resolveRendererUiLocale } from '../../../../shared/ui-locale'
 import { StsModelTurnTaking } from '../../../../shared/sts-model-turn-taking'
 import { useNativeChatVoiceModels } from './use-native-chat-voice-models'
-import type { NativeChatStructuredComposerTransport } from './native-chat-composer-types'
-import { completeNativeChatStructuredUserAction } from './native-chat-structured-user-action'
+import type { NativeChatVoiceTransport } from './native-chat-voice-transport'
 import { useNativeChatVoiceInput } from './use-native-chat-voice-input'
 import { useNativeChatVoicePlayback } from './use-native-chat-voice-playback'
 import { NativeChatVoicePanel } from './NativeChatVoicePanel'
@@ -19,7 +18,7 @@ export type NativeChatVoiceConversationProps = {
   working: boolean
   messages: readonly NativeChatMessage[]
   completedTurn?: string
-  transport: NativeChatStructuredComposerTransport
+  transport: NativeChatVoiceTransport
   onStopAgent: () => boolean | void
 }
 
@@ -198,7 +197,7 @@ export function NativeChatVoiceConversation(
       if (result === false) {
         failed(false)
       } else {
-        completeNativeChatStructuredUserAction('codex', props.transport, result === true)
+        props.transport.onAccepted?.(result === true)
       }
     } catch {
       failed(true)
@@ -336,6 +335,7 @@ export function NativeChatVoiceConversation(
         notice={
           notice ||
           input.error ||
+          (running && queued ? props.transport.sendBlockedReason : '') ||
           (playback.error
             ? translate(
                 'stsLive.audioFailed',
@@ -356,9 +356,6 @@ export function NativeChatVoiceConversation(
         onToggle={async () => {
           if (running || preparing) {
             end()
-            if (props.working) {
-              props.onStopAgent()
-            }
             return
           }
           gate.current?.reset()
