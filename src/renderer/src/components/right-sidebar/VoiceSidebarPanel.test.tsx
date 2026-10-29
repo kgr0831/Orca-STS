@@ -12,7 +12,12 @@ const fake = vi.hoisted(() => ({
     executionHostId: 'local',
     key: 'local-folder',
     entry: undefined,
-    tab: { id: 'existing-chat', entityId: 'session', label: 'Existing conversation' }
+    tab: {
+      id: 'existing-chat',
+      entityId: 'session',
+      label: 'Existing conversation',
+      contentType: 'agent-session'
+    }
   }
 }))
 vi.mock('@/store/voice-sidebar-session', () => ({
@@ -40,7 +45,8 @@ it('connects to the selected chat without creating one and releases its portal w
   fake.workspace.tab = {
     id: 'second-chat',
     entityId: 'second-session',
-    label: 'Second conversation'
+    label: 'Second conversation',
+    contentType: 'agent-session'
   }
   rerender(<VoiceSidebarPanel />)
   expect(useVoiceSidebarSessions.getState().portal?.tabId).toBe('second-chat')
@@ -48,5 +54,19 @@ it('connects to the selected chat without creating one and releases its portal w
   fireEvent.click(screen.getByRole('button', { name: 'New chat' }))
   expect(fake.create).toHaveBeenCalledExactlyOnceWith('local-folder', 'folder', 'local')
   unmount()
+  expect(useVoiceSidebarSessions.getState().portal).toBeNull()
+})
+
+it('attaches to an existing terminal without launching a replacement conversation', () => {
+  fake.workspace.tab = {
+    id: 'existing-terminal',
+    entityId: 'terminal-session',
+    label: 'Terminal conversation',
+    contentType: 'terminal'
+  }
+  const view = render(<VoiceSidebarPanel />)
+  expect(useVoiceSidebarSessions.getState().portal?.tabId).toBe('existing-terminal')
+  expect(fake.create).not.toHaveBeenCalled()
+  view.unmount()
   expect(useVoiceSidebarSessions.getState().portal).toBeNull()
 })

@@ -8,6 +8,9 @@ export const NATIVE_CHAT_CLEAR_UNSUBMITTED_INPUT = '\x15'
 export const NATIVE_CHAT_CLEAR_CONFIRM_MS = 140
 
 export type NativeChatSendOptions = {
+  /** Recheck the live input owner when a queued write actually starts. */
+  canStart?: () => boolean
+  stopOnUnconfirmed?: boolean
   /** The host refused a write; nothing after it was sent. */
   onWriteRejected?: () => void
   /** A write's acknowledgment was lost; it may or may not have landed. */

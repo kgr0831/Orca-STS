@@ -10,18 +10,22 @@ import {
 import { structuredAgentSessionTabId } from '../../../shared/structured-agent-session-projection'
 import type { ExecutionHostId } from '../../../shared/execution-host'
 import { useVoiceSidebarSessions, type VoiceSessionEntry } from './voice-sidebar-state'
+import { getKnownExecutionHostIdForWorktree } from '@/lib/worktree-runtime-owner'
 
 export function useVoiceSidebarWorkspace() {
   const worktreeId = useAppStore((s) => s.activeWorktreeId)
   const tab = useAppStore((s) => {
     const active = worktreeId ? s.getActiveTab(worktreeId) : null
-    return active?.contentType === 'agent-session' && active.agentSessionAgent === 'codex'
+    return active?.contentType === 'terminal' ||
+      (active?.contentType === 'agent-session' && active.agentSessionAgent === 'codex')
       ? active
       : null
   })
   const executionHostId = useAppStore((s) =>
     tab
-      ? structuredAgentSessionOwnerForTab(s, tab)
+      ? tab.contentType === 'terminal'
+        ? (tab.executionHostId ?? getKnownExecutionHostIdForWorktree(s, tab.worktreeId))
+        : structuredAgentSessionOwnerForTab(s, tab)
       : worktreeId
         ? resolveStructuredAgentSessionOwner(s, worktreeId)
         : null

@@ -9,16 +9,18 @@ export function NativeChatVoiceSettings({
   working
 }: {
   voice?: VoiceSettings
-  transport: Pick<NativeChatStructuredComposerTransport, 'optionsSurface' | 'optionSnapshot'>
+  transport?: Pick<NativeChatStructuredComposerTransport, 'optionsSurface' | 'optionSnapshot'>
   working: boolean
 }): React.JSX.Element {
   return (
     <div className="space-y-1 border-b border-border px-3 py-2">
-      <NativeChatSessionOptionPickers
-        surface={transport.optionsSurface}
-        snapshot={transport.optionSnapshot}
-        isWorking={working}
-      />
+      {transport ? (
+        <NativeChatSessionOptionPickers
+          surface={transport.optionsSurface}
+          snapshot={transport.optionSnapshot}
+          isWorking={working}
+        />
+      ) : null}
       <p className="text-xs text-chat-foreground-faint">
         {translate('stsLive.inputProvider', 'Speech recognition')}:{' '}
         {voice?.sttModel === 'elevenlabs-scribe-v2-realtime'
@@ -31,10 +33,15 @@ export function NativeChatVoiceSettings({
           : translate('elevenLabsVoice.local', 'Local system voice · free')}
       </p>
       <p className="text-xs text-chat-foreground-faint">
-        {translate(
-          'stsHistory.modelHint',
-          'Voice uses this chat’s model and permissions. Change the model above when needed.'
-        )}
+        {transport
+          ? translate(
+              'stsHistory.modelHint',
+              'Voice uses this chat’s model and permissions. Change the model above when needed.'
+            )
+          : translate(
+              'stsHistory.terminalModelHint',
+              'Voice continues this terminal’s conversation with its current model and permissions.'
+            )}
       </p>
     </div>
   )

@@ -22,6 +22,12 @@ export function sendNativeChatObservedWrites(
       clearConfirmDurationMs(options) +
       (options.settleDelayMs ?? 0),
     ({ isCancelled, delay, markSubmitted }) => {
+      if (options.canStart && !options.canStart()) {
+        options.onWriteRejected?.()
+        options.onDeliverySettled?.(false)
+        markSubmitted()
+        return
+      }
       let reportedUnconfirmed = false
       let acknowledged = true
       const writeAt = (index: number): void => {

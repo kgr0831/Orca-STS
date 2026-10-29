@@ -21314,7 +21314,10 @@
     "newChat": "新建聊天",
     "createFailed": "无法打开新聊天，请重试。",
     "selectChat": "选择已打开的Codex聊天以继续语音对话，或选择新建聊天。",
-    "modelHint": "语音使用此聊天的模型和权限。需要时可在上方更改模型。"
+    "modelHint": "语音使用此聊天的模型和权限。需要时可在上方更改模型。",
+    "terminalModelHint": "语音将使用此终端当前的模型和权限继续同一段对话。",
+    "terminalRequired": "在此终端中启动或恢复 Codex，即可通过语音继续同一段对话。",
+    "terminalInputBusy": "发送语音内容前，请先完成终端中正在编辑的输入或待处理的批准请求。"
   },
   "stsLive": {
     "start": "开始语音对话",
